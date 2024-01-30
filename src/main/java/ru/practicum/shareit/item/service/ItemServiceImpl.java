@@ -1,25 +1,28 @@
 package ru.practicum.shareit.item.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.NotAccessException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.ItemStorage;
 
-import java.util.Collection;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class ItemServiceImpl implements ItemService {
 
     public ItemStorage itemStorage;
 
-    @Autowired
+    /*@Autowired
     public ItemServiceImpl(ItemStorage itemStorage) {
         this.itemStorage = itemStorage;
-    }
+    }*/
 
     @Override
-    public Collection<Item> getAll() {
+    public List<Item> getAll() {
         return itemStorage.getAll();
     }
 
@@ -30,14 +33,17 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Item create(Item item) {
+    public Item create(Item item, Long userId) {
         return itemStorage.create(item);
     }
 
     @Override
-    public Item update(Item item) {
+    public Item update(Item item, Long ownerId) {
         Item updatingItem = itemStorage.getItem(item.getId())
                 .orElseThrow(() -> new NotFoundException("Updating item not found"));
+        if (!updatingItem.getOwner().getId().equals(ownerId)) {
+            throw new NotAccessException("Only item's owner can update data");
+        }
         itemStorage.update(item);
         return itemStorage.getItem(item.getId()).get();
     }

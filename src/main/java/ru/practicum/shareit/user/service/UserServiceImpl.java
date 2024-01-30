@@ -2,6 +2,7 @@ package ru.practicum.shareit.user.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.exception.EmailDuplicateException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.User;
 import ru.practicum.shareit.user.storage.UserStorage;
@@ -30,6 +31,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User create(User user) {
+        if (userStorage.getAll().stream()
+                .anyMatch(u -> u.getEmail().equalsIgnoreCase(user.getEmail()))) {
+            throw new EmailDuplicateException
+                    (String.format("User with this email: %s already exists", user.getEmail()));
+        }
         return userStorage.create(user);
     }
 
