@@ -40,8 +40,8 @@ public class UserServiceImpl implements UserService {
     public User create(User user) {
         if (userStorage.getAll().stream()
                 .anyMatch(u -> u.getEmail().equalsIgnoreCase(user.getEmail()))) {
-            throw new EmailDuplicateException
-                    (String.format("User with this email: %s already exists", user.getEmail()));
+            throw new EmailDuplicateException(
+                    String.format("User with this email: %s already exists", user.getEmail()));
         }
         return userStorage.create(user);
     }
