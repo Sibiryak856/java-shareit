@@ -40,6 +40,14 @@ public class ErrorHandler {
         return new ErrorResponse(message);
     }
 
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIncorrectRequestException(final IncorrectRequestException e) {
+        String message = e.getMessage();
+        log.info(message);
+        return new ErrorResponse(message);
+    }
+
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)

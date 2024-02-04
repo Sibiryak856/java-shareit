@@ -1,9 +1,11 @@
 package ru.practicum.shareit.item.storage;
 
+import org.springframework.stereotype.Component;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.*;
 
+@Component
 public class ItemInMemStorageImpl implements ItemStorage {
 
     private Long itemId = 0L;
@@ -16,6 +18,9 @@ public class ItemInMemStorageImpl implements ItemStorage {
 
     @Override
     public Optional<Item> getItem(Long id) {
+        if (!items.containsKey(id)) {
+            return Optional.empty();
+        }
         return Optional.of(items.get(id));
     }
 
@@ -23,7 +28,7 @@ public class ItemInMemStorageImpl implements ItemStorage {
     public Item create(Item item) {
         item.setId(++itemId);
         items.put(item.getId(), item);
-        return null;
+        return item;
     }
 
     @Override

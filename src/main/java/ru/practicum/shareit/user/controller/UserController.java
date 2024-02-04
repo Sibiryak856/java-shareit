@@ -4,11 +4,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.dto.UserCreateDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserUpdateDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
 import javax.validation.Valid;
-import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * TODO Sprint add-controllers.
@@ -19,48 +24,51 @@ import java.util.Collection;
 @Slf4j
 public class UserController {
 
-    private final UserServiceImpl userservice;
+    private final UserServiceImpl userService;
 
     @Autowired
-    public UserController(UserServiceImpl userservice) {
-        this.userservice = userservice;
+    public UserController(UserServiceImpl userService) {
+        this.userService = userService;
     }
 
     @GetMapping
-    public Collection<User> getAll() {
+    public List<UserResponseDto> getAll() {
         log.info("Request received: GET /users");
-        Collection<User> users = userservice.getAll();
+        List<User> users = userService.getAll();
         log.info("Request GET /users processed: {}", users);
-        return users;
+        return users.stream()
+                .map(u -> UserMapper.INSTANCE.toDto(u))
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
-    public User getUser(@PathVariable Long id) {
+    public UserResponseDto getUser(@PathVariable Long id) {
         log.info("Request received: GET /users/id={}", id);
-        User user = userservice.getUser(id);
+        User user = userService.getUser(id);
         log.info("Request GET /users/id processed: {}", user);
-        return user;
+        return UserMapper.INSTANCE.toDto(user);
     }
 
     @PostMapping
-    public User create(@Valid @RequestBody User user) {
-        log.info("Request received: POST /users: {}", user);
-        User createdUser = userservice.create(user);
+    public UserResponseDto create(@Valid @RequestBody UserCreateDto userCreateDto) {
+        log.info("Request received: POST /users: {}", userCreateDto);
+        User createdUser = userService.create(UserMapper.INSTANCE.toUser(userCreateDto));
         log.info("Request POST /users processed: user={} is created", createdUser);
-        return createdUser;
+        return UserMapper.INSTANCE.toDto(createdUser);
     }
 
-    @PatchMapping
-    public User update(@Valid @RequestBody User user) {
-        log.info("Request received: PATCH /users: {}", user);
-        User updatedUser = userservice.update(user);
-        log.info("Request PUT /users processed: user: {} is updated", updatedUser);
-        return updatedUser;
+    @PatchMapping("/{id}")
+    public UserResponseDto update(@PathVariable Long id,
+                                  @RequestBody UserUpdateDto userUpdateDto) {
+        log.info("Request received: PATCH /users: {}", userUpdateDto);
+        User updatedUser = userService.update(id, userUpdateDto);
+        log.info("Request PATCH /users processed: user: {} is updated", updatedUser);
+        return UserMapper.INSTANCE.toDto(updatedUser);
     }
 
-    @DeleteMapping
+    @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
-        log.info("Request received: DELETE /users/id=", id);
-        userservice.delete(id);
+        log.info("Request received: DELETE /users/id={}", id);
+        userService.delete(id);
     }
 }

@@ -1,14 +1,12 @@
 package ru.practicum.shareit.user.storage;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.user.User;
+import ru.practicum.shareit.user.model.User;
 
 import java.util.*;
 
 
 @Component
-@RequiredArgsConstructor
 public class UserInMemStorageImpl implements UserStorage {
 
     private Long userId = 0L;
@@ -25,6 +23,9 @@ public class UserInMemStorageImpl implements UserStorage {
 
     @Override
     public Optional<User> getUser(Long id) {
+        if (!users.containsKey(id)) {
+            return Optional.empty();
+        }
         return Optional.of(users.get(id));
     }
 
