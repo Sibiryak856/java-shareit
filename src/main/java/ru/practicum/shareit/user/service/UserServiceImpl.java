@@ -2,75 +2,67 @@ package ru.practicum.shareit.user.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exception.EmailDuplicateException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.storage.ItemStorage;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.item.repository.ItemRepository;
+import ru.practicum.shareit.user.dto.UserCreateDto;
+import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
 
-    public UserStorage userStorage;
-    private ItemStorage itemStorage;
+    public UserRepository userRepository;
+    private ItemRepository itemRepository;
+    private UserMapper userMapper;
 
     @Autowired
-    public UserServiceImpl(UserStorage userStorage, ItemStorage itemStorage) {
-        this.userStorage = userStorage;
-        this.itemStorage = itemStorage;
+    public UserServiceImpl(UserRepository userRepository, ItemRepository itemRepository, UserMapper userMapper) {
+        this.userRepository = userRepository;
+        this.itemRepository = itemRepository;
+        this.userMapper = userMapper;
     }
 
 
     @Override
-    public List<User> getAll() {
-        return userStorage.getAll();
+    public List<UserResponseDto> getAll() {
+        return userRepository.getAll().stream()
+                .map(u -> userMapper.toDto(u))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public User getUser(Long id) {
-        return userStorage.getUser(id)
-                .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", id)));
+    public UserResponseDto getUser(Long id) {
+        return userMapper.toDto(
+                userRepository.getUser(id)
+                .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", id)))
+        );
     }
 
     @Override
-    public User create(User user) {
-        if (userStorage.getAll().stream()
-                .anyMatch(u -> u.getEmail().equalsIgnoreCase(user.getEmail()))) {
-            throw new EmailDuplicateException(String.format("User with this email: %s already exists", user.getEmail()));
-        }
-        return userStorage.create(user);
+    public UserResponseDto create(UserCreateDto userCreateDto) {
+        return userMapper.toDto(userRepository.create(userMapper.toUser(userCreateDto)));
     }
 
     @Override
-    public User update(Long id, UserUpdateDto userUpdateDto) {
-        User updatingUser = userStorage.getUser(id)
+    public UserResponseDto update(Long id, UserUpdateDto userUpdateDto) {
+        User updatingUser = userRepository.getUser(id)
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        if (userUpdateDto.getEmail() != null) {
-            if (!updatingUser.getEmail().equalsIgnoreCase(userUpdateDto.getEmail())) {
-                if (userStorage.getAll().stream()
-                        .anyMatch(u -> u.getEmail().equalsIgnoreCase(userUpdateDto.getEmail()))) {
-                    throw new EmailDuplicateException
-                            (String.format("User with this email: %s already exists", userUpdateDto.getEmail()));
-                }
-            }
-        }
-        userStorage.update(UserMapper.INSTANCE.update(userUpdateDto, updatingUser));
-        return userStorage.getUser(id).get();
+        userUpdateDto.setId(id);
+        userRepository.update(userMapper.toUser(userUpdateDto));
+        return userMapper.toDto(userRepository.getUser(id).get());
     }
 
     @Override
     public void delete(Long id) {
-        User deletingUser = userStorage.getUser(id)
+        User deletingUser = userRepository.getUser(id)
                 .orElseThrow(() -> new NotFoundException("Deleting user not found"));
-        itemStorage.getAll().forEach(item -> {
-            if (item.getOwner().equals(deletingUser)) {
-                itemStorage.delete(item.getId());
-            }
-        });
-        userStorage.delete(id);
+        itemRepository.deleteAllByUser(id);
+        userRepository.delete(id);
     }
 }

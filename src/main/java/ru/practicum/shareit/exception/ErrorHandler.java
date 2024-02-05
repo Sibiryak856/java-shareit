@@ -35,7 +35,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleEmailDuplicateException(final EmailDuplicateException e) {
+    public ErrorResponse handleEmailDuplicateException(final DuplicateException e) {
         String message = e.getMessage();
         log.info(message);
         return new ErrorResponse(message);
@@ -83,6 +83,6 @@ public class ErrorHandler {
     public ErrorResponse handleThrowable(final Throwable e) {
         String errorMsg = "Unexpected error occurred";
         log.error(errorMsg, e);
-        return new ErrorResponse(errorMsg);
+        return new ErrorResponse(e);
     }
 }

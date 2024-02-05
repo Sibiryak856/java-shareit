@@ -4,10 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import ru.practicum.shareit.user.model.User;
 
-/**
- * TODO Sprint add-controllers.
- */
-
 @Data
 @Builder
 public class Item {
@@ -22,5 +18,4 @@ public class Item {
 
     private User owner;
 
-    //private ItemRequest request;
 }
