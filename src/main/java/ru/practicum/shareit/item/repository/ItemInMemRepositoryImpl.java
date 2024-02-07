@@ -20,7 +20,7 @@ public class ItemInMemRepositoryImpl implements ItemRepository {
 
     @Override
     public Optional<Item> getItem(Long id) {
-        return Optional.of(items.get(id));
+        return Optional.ofNullable(items.get(id));
     }
 
     @Override
@@ -41,16 +41,13 @@ public class ItemInMemRepositoryImpl implements ItemRepository {
         List<Item> userItemList = userItems.get(userId);
         userItemList.set(userItemList.indexOf(items.get(item.getId())), item);
         userItems.put(userId, userItemList);
-
         items.put(item.getId(), item);
     }
 
     @Override
     public void delete(Long id, Long userId) {
         List<Item> userItemList = userItems.get(userId);
-        userItemList.remove(userItemList.indexOf(items.get(id)));
-        userItems.put(userId, userItemList);
-
+        userItemList.remove(items.get(id));
         items.remove(id);
     }
 
@@ -65,10 +62,9 @@ public class ItemInMemRepositoryImpl implements ItemRepository {
 
     @Override
     public void deleteAllByUser(Long id) {
-        List<Item> itemList = userItems.get(id);
+        List<Item> itemList = userItems.remove(id);
         if (itemList != null) {
             itemList.forEach(item -> items.remove(item.getId()));
         }
-        userItems.remove(id);
     }
 }

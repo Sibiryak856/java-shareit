@@ -33,10 +33,7 @@ public class UserInMemRepository implements UserRepository {
 
     @Override
     public Optional<User> getUser(Long id) {
-        if (!users.containsKey(id)) {
-            return Optional.empty();
-        }
-        return Optional.of(users.get(id));
+        return Optional.ofNullable(users.get(id));
     }
 
     @Override
@@ -59,9 +56,9 @@ public class UserInMemRepository implements UserRepository {
                             String.format("User with this email: %s already exists", user.getEmail())
                     );
                 }
+                usersEmailSet.remove(updatingUser.getEmail());
             }
         }
-        usersEmailSet.remove(updatingUser.getEmail());
         userMapper.update(user, updatingUser);
     }
 
