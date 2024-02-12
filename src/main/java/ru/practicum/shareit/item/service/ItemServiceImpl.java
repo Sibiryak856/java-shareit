@@ -9,9 +9,10 @@ import ru.practicum.shareit.item.dto.ItemResponseDto;
 import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.item.repository.ItemDao;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
+import ru.practicum.shareit.user.repository.UserDao;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,23 +21,26 @@ import java.util.stream.Collectors;
 @Service
 public class ItemServiceImpl implements ItemService {
 
-    public ItemRepository itemRepository;
-    private UserRepository userRepository;
+    public ItemDao itemDao;
+    private UserDao userDao;
     private ItemMapper itemMapper;
 
     @Autowired
-    public ItemServiceImpl(ItemRepository itemRepository, UserRepository userRepository, ItemMapper itemMapper) {
-        this.itemRepository = itemRepository;
-        this.userRepository = userRepository;
+    public ItemServiceImpl(ItemDao itemDao, UserDao userDao, ItemMapper itemMapper) {
+        this.itemDao = itemDao;
+        this.userDao = userDao;
         this.itemMapper = itemMapper;
     }
 
 
     @Override
     public List<ItemResponseDto> getAllByUser(Long userId) {
-        User user = userRepository.getUser(userId)
-                .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", userId)));
-        return itemRepository.getAllByUser(userId).stream()
+        if (!userDao.existsById(userId)) {
+            throw new NotFoundException(String.format("User id=%d not found", userId));
+        }
+        /*User user = userRepository.getUser(userId)
+                .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", userId)));*/
+        return itemDao.findByOwner(userId).stream()
                 .map(item -> itemMapper.toItemDto(item))
                 .collect(Collectors.toList());
     }
@@ -44,43 +48,43 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemResponseDto getItem(Long itemId) {
         return itemMapper.toItemDto(
-                itemRepository.getItem(itemId)
+                itemDao.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item id=%d not found", itemId)))
         );
     }
 
     @Override
     public ItemResponseDto create(ItemCreateDto itemCreateDto, Long userId) {
-        User user = userRepository.getUser(userId)
+        User user = userDao.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", userId)));
         Item item = itemMapper.toItem(itemCreateDto);
         item.setOwner(user);
-        return itemMapper.toItemDto(itemRepository.create(item, userId));
+        return itemMapper.toItemDto(itemDao.save(item));
     }
 
     @Override
     public ItemResponseDto update(Long itemId, Long ownerId, ItemUpdateDto itemUpdateDto) {
-        User owner = userRepository.getUser(ownerId)
+        User owner = userDao.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException("Owner not found"));
-        Item updatingItem = itemRepository.getItem(itemId)
+        Item item = itemDao.findById(itemId)
                 .orElseThrow(() -> new NotFoundException("Updating item not found"));
-        if (!updatingItem.getOwner().equals(owner)) {
+        if (!item.getOwner().equals(owner)) {
             throw new NotAccessException("Only item's owner can update data");
         }
-        itemRepository.update(itemMapper.update(itemUpdateDto, updatingItem), ownerId);
-        return itemMapper.toItemDto(itemRepository.getItem(itemId).get());
+        Item updatedItem = itemDao.save(itemMapper.update(itemUpdateDto, item));
+        return itemMapper.toItemDto(updatedItem);
     }
 
     @Override
     public void delete(Long id, Long ownerId) {
-        User user = userRepository.getUser(ownerId)
+        User user = userDao.findById(ownerId)
                 .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", ownerId)));
-        Item deletingItem = itemRepository.getItem(id)
+        Item deletingItem = itemDao.findById(id)
                 .orElseThrow(() -> new NotFoundException("Deleting item not found"));
-        if (!deletingItem.getOwner().getId().equals(ownerId)) {
+        if (!deletingItem.getOwner().equals(user)) {
             throw new NotAccessException("Only item's owner can delete data");
         }
-        itemRepository.delete(id, ownerId);
+        itemDao.deleteById(id);
     }
 
     @Override
@@ -88,7 +92,9 @@ public class ItemServiceImpl implements ItemService {
         if (text.isEmpty()) {
             return new ArrayList<>();
         }
-        return itemRepository.findByName(text.toLowerCase()).stream()
+        return itemDao
+                .findAllByNameOrDescriptionContainingIgnoreCase(text.toLowerCase(), text.toLowerCase())
+                .stream()
                 .map(item-> itemMapper.toItemDto(item))
                 .collect(Collectors.toList());
     }
