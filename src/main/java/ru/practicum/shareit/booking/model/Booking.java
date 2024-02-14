@@ -1,15 +1,11 @@
 package ru.practicum.shareit.booking.model;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import java.time.Instant;
+import javax.persistence.*;
+import java.time.LocalDateTime;
 
 /**
  * TODO Sprint add-bookings.
@@ -20,18 +16,30 @@ import java.time.Instant;
 @Setter
 @EqualsAndHashCode
 @NoArgsConstructor
+@AllArgsConstructor
+@Table(name = "BOOKINGS", schema = "PUBLIC")
 public class Booking {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "BOOKING_ID")
     Long bookingId;
 
-    Instant startBooking;
+    @Column(name = "START_TIME")
+    LocalDateTime start;
 
-    Instant endBooking;
+    @Column(name = "END_TIME")
+    LocalDateTime end;
 
+    @ManyToOne
+    @JoinColumn(name = "ITEM_ID")
     Item item;
 
+    @ManyToOne
+    @JoinColumn(name = "USER_ID")
     User booker;
 
+    @Column(name = "STATUS")
+    @Enumerated(EnumType.STRING)
     BookingStatus status;
 }
