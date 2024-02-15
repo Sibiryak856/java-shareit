@@ -2,6 +2,9 @@ package ru.practicum.shareit.item.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.exception.NotAccessException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemCreateDto;
@@ -10,11 +13,12 @@ import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemDao;
-import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserDao;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,12 +27,14 @@ public class ItemServiceImpl implements ItemService {
 
     public ItemDao itemDao;
     private UserDao userDao;
+    private BookingRepository bookingRepository;
     private ItemMapper itemMapper;
 
     @Autowired
-    public ItemServiceImpl(ItemDao itemDao, UserDao userDao, ItemMapper itemMapper) {
+    public ItemServiceImpl(ItemDao itemDao, UserDao userDao, BookingRepository bookingRepository, ItemMapper itemMapper) {
         this.itemDao = itemDao;
         this.userDao = userDao;
+        this.bookingRepository = bookingRepository;
         this.itemMapper = itemMapper;
     }
 
@@ -38,9 +44,24 @@ public class ItemServiceImpl implements ItemService {
         if (!userDao.existsById(userId)) {
             throw new NotFoundException(String.format("User id=%d not found", userId));
         }
-        /*User user = userRepository.getUser(userId)
-                .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", userId)));*/
-        return itemDao.findByOwner(userId).stream()
+        List<Item> userItems = itemDao.findByUserId(userId);
+        if (userItems.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<Long> itemsIdList = userItems.stream()
+                .map(item -> item.getId())
+                .collect(Collectors.toList());
+        List<Booking> bookingsUserItems =
+                bookingRepository.findByItemIdInAndStatus(itemsIdList, BookingStatus.APPROVED.name());
+        List<Item> approvedItems = bookingsUserItems.stream()
+                .map(Booking::getItem)
+                .collect(Collectors.toList());
+
+        for (Booking booking : bookingsUserItems) {
+
+        }
+
+        return itemDao.findByUserId(userId).stream()
                 .map(item -> itemMapper.toItemDto(item))
                 .collect(Collectors.toList());
     }
@@ -57,8 +78,7 @@ public class ItemServiceImpl implements ItemService {
     public ItemResponseDto create(ItemCreateDto itemCreateDto, Long userId) {
         User user = userDao.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", userId)));
-        Item item = itemMapper.toItem(itemCreateDto);
-        item.setOwner(user);
+        Item item = itemMapper.toItem(itemCreateDto, user);
         return itemMapper.toItemDto(itemDao.save(item));
     }
 

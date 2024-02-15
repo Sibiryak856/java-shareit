@@ -62,17 +62,21 @@ public class BookingController {
         return null;
     }
 
-    @GetMapping("/owner")
-    public List<BookingDto> getByOwnerQuery(@RequestHeader("X-Sharer-User-Id") long userId,
-                                            @RequestParam String state) {
-        log.debug("Request received: GET /bookings/search");
-        List<BookingDto> searchedBookings = bookingService.getByOwnerQuery(userId, state);
-        log.debug("Request GET /bookings/search processed: searchedItems: {}", searchedBookings);
-        return searchedBookings;
+    @GetMapping
+    public List<BookingResponseDto> getAllByUserQuery(@RequestHeader("X-Sharer-User-Id") long userId,
+                                              @RequestParam(defaultValue = "ALL", required = false) String state) {
+        log.debug("Request received: GET /bookings");
+        List<BookingResponseDto> searchedBookings = bookingService.getAllByUserQuery(userId, state);
+        log.debug("Request GET /bookings processed: searchedBookings: {}", searchedBookings);
+        return null;
     }
 
-    /*@GetMapping("/owner")
-    public List<BookingDto> getByOwner() {
-        return null;
-    }*/
+    @GetMapping("/owner")
+    public List<BookingResponseDto> getAllByOwnerQuery(@RequestHeader("X-Sharer-User-Id") long userId,
+                                            @RequestParam(defaultValue = "ALL", required = false) String state) {
+        log.debug("Request received: GET /bookings/owner");
+        List<BookingResponseDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, state);
+        log.debug("Request GET /bookings/owner processed: searchedBookings: {}", searchedBookings);
+        return searchedBookings;
+    }
 }

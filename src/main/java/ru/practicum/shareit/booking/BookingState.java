@@ -1,5 +1,7 @@
 package ru.practicum.shareit.booking;
 
+import java.util.Optional;
+
 public enum BookingState {
 
     ALL,
@@ -14,12 +16,12 @@ public enum BookingState {
 
     WAITING;
 
-    public static BookingState from(String state) {
+    public static Optional<BookingState> from(String state) {
         for (BookingState value : BookingState.values()) {
             if (value.name().equals(state)) {
-                return value;
+                return Optional.of(value);
             }
         }
-        throw new IllegalArgumentException("Unknown state: " + state);
+        return Optional.empty();
     }
 }

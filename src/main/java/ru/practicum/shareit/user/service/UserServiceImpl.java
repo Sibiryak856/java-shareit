@@ -74,7 +74,7 @@ public class UserServiceImpl implements UserService {
         if (!userDao.existsById(id)) {
             throw new NotFoundException("Deleting user not found");
         }
-        itemDao.deleteByOwner(id);
+        itemDao.deleteByUserId(id);
         userDao.deleteById(id);
     }
 }
