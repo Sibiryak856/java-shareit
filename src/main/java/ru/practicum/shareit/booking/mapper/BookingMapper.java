@@ -6,9 +6,6 @@ import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.item.dto.ItemCreateDto;
-import ru.practicum.shareit.item.dto.ItemResponseDto;
-import ru.practicum.shareit.item.dto.ItemUpdateDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
@@ -22,7 +19,7 @@ public interface BookingMapper {
 
     BookingResponseDto toBookingResponseDto(Booking booking);
 
-    Booking toBooking(BookingCreateDto bookingCreateDto, User booker, Item item, BookingStatus status);
+    Booking toBooking(BookingCreateDto bookingCreateDto, BookingStatus status);
 
     BookingResponseDto.UserDto map(User user);
 

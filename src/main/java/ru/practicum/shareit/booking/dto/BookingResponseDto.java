@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Data
 public class BookingResponseDto {
 
-    Long bookingId;
+    Long id;
 
     LocalDateTime startTime;
 

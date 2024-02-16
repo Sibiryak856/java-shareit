@@ -1,11 +1,9 @@
 package ru.practicum.shareit.booking.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.item.model.Item;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,55 +11,67 @@ import java.util.List;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    List<Booking> findByUserIdOrderByStartTimeDesc(long userId);
+    List<Booking> findAllByBookerIdOrderByStartTimeDesc(long userId);
 
-    @Query("SELECT B FROM BOOKINGS AS B " +
-            "WHERE B.USER_ID = :userId " +
-            "AND B.START_TIME <= CURRENT_TIMESTAMP " +
-            "AND B.END_TIME >= CURRENT_TIMESTAMP " +
-            "ORDER BY B.START_TIME DESC")
-    List<Booking> findCurrentBookingByUser(@Param("USER_ID") long userId);
+    /*@Query("SELECT B FROM Bookings AS B " +
+            "WHERE B.USER.ID = :userId " +
+            "AND B.START.TIME <= CURRENT_TIMESTAMP " +
+            "AND B.END.TIME >= CURRENT_TIMESTAMP " +
+            "ORDER BY B.START.TIME DESC")*/
+    List<Booking> findAllByBookerIdAndStartTimeBeforeAndEndTimeAfter(@Param("userId") long userId, LocalDateTime start, LocalDateTime end);
 
-    List<Booking> findByUserIdAndStartTimeAfterOrderByStartTimeDesc(long userId, LocalDateTime now);
+    List<Booking> findByBookerIdAndStartTimeAfterOrderByStartTimeDesc(long userId, LocalDateTime now);
 
-    List<Booking> findByUserIdAndEndTimeBeforeOrderByStartTimeDesc(long userId, LocalDateTime now);
+    List<Booking> findByBookerIdAndEndTimeBeforeOrderByStartTimeDesc(long userId, LocalDateTime now);
 
 
-    List<Booking> findBookingByUserIdAndStatusOrderByStartTimeDesc(long userId, String name);
+    List<Booking> findBookingByBookerIdAndStatusOrderByStartTimeDesc(long userId, String name);
 
-    @Query("SELECT B FROM BOOKINGS AS B " +
-            "LEFT JOIN ITEMS AS I ON I.ITEM_ID = B.ITEM_ID " +
-            "WHERE I.USER_ID = :userID " +
-            "ORDER BY B.START_TIME DESC")
-    List<Booking> findAllBookingByItemOwner(@Param("USER_ID") long userId);
+    /*@Query("SELECT B FROM Bookings AS B " +
+            "LEFT JOIN Items AS I ON I.ITEM.ID = B.ITEM.ID " +
+            "WHERE I.USER.ID = :userID " +
+            "ORDER BY B.START.TIME DESC")*/
+    List<Booking> findAllByItemOwnerId(@Param("userId") long userId);
 
-    @Query("SELECT B FROM BOOKINGS AS B " +
-            "LEFT JOIN ITEMS AS I ON I.ITEM_ID = B.ITEM_ID " +
-            "WHERE I.USER_ID = :userId " +
-            "AND B.START_TIME <= CURRENT_TIMESTAMP " +
-            "AND B.END_TIME >= CURRENT_TIMESTAMP " +
-            "ORDER BY B.START_TIME DESC")
-    List<Booking> findCurrentBookingByOwner(@Param("USER_ID") long userId);
+    /*@Query("SELECT B FROM Bookings AS B " +
+            "LEFT JOIN Items AS I ON I.ITEM.ID = B.ITEM.ID " +
+            "WHERE I.USER.ID = :userId " +
+            "AND B.START.TIME < CURRENT_TIMESTAMP " +
+            "AND B.END.TIME > CURRENT_TIMESTAMP " +
+            "ORDER BY B.START.TIME DESC")
+    List<Booking> findCurrentBookingByOwner(@Param("userId") long userId);*/
+    List<Booking> findAllByItemOwnerIdAndStartTimeBeforeAndEndTimeAfter(Long userId, LocalDateTime start, LocalDateTime end);
 
-    @Query("SELECT B FROM BOOKINGS AS B " +
-            "LEFT JOIN ITEMS AS I ON I.ITEM_ID = B.ITEM_ID " +
-            "WHERE I.USER_ID = :userId " +
-            "AND B.START_TIME > CURRENT_TIMESTAMP " +
-            "ORDER BY B.START_TIME DESC")
-    List<Booking> findFutureBookingByOwner(@Param("USER_ID") long userId);
+    /*@Query("SELECT B FROM Bookings AS B " +
+            "LEFT JOIN Items AS I ON I.ITEM.ID = B.ITEM.ID " +
+            "WHERE I.USER.ID = :userId " +
+            "AND B.START.TIME > CURRENT_TIMESTAMP " +
+            "ORDER BY B.START.TIME DESC")*/
+    List<Booking> findAllByItemOwnerIdAndStartTimeAfter(long userId, LocalDateTime now);
 
-    @Query("SELECT B FROM BOOKINGS AS B " +
-            "LEFT JOIN ITEMS AS I ON I.ITEM_ID = B.ITEM_ID " +
-            "WHERE I.USER_ID = :userId " +
-            "AND B.END_TIME < CURRENT_TIMESTAMP " +
-            "ORDER BY B.START_TIME DESC")
-    List<Booking> findPastBookingByOwner(@Param("USER_ID") long userId);
+    /*@Query("SELECT B FROM Bookings AS B " +
+            "LEFT JOIN Items AS I ON I.ITEM.ID = B.ITEM.ID " +
+            "WHERE I.USER.ID = :userId " +
+            "AND B.END.TIME < CURRENT_TIMESTAMP " +
+            "ORDER BY B.START.TIME DESC")*/
+    List<Booking> findAllByItemOwnerIdAndEndTimeBefore(long userId, LocalDateTime now);
 
-    @Query("SELECT B FROM BOOKINGS AS B " +
-            "LEFT JOIN ITEMS AS I ON I.ITEM_ID = B.ITEM_ID " +
-            "WHERE I.USER_ID = :userId AND B.STATUS = :status " +
-            "ORDER BY B.START_TIME DESC")
-    List<Booking> findBookingByOwnerAndStatus(@Param("USER_ID") long userId, @Param("STATUS") String status);
+    /*@Query("SELECT B FROM Bookings AS B " +
+            "LEFT JOIN Items AS I ON I.ITEM.ID = B.ITEM.ID " +
+            "WHERE I.USER.ID = :userId AND B.STATUS = :status " +
+            "ORDER BY B.START.TIME DESC")*/
+    List<Booking> findBookingByItemOwnerIdAndStatus(@Param("userId") long userId, @Param("status") String status);
 
-    List<Booking> findByItemIdInAndStatus(List<Long> itemsIdList, String name);
+    /**
+     * TODO add sort and pageable
+     */
+    /*@Query("SELECT B FROM BOOKINGS AS B " +
+            "LEFT JOIN ITEMS AS I ON I.ITEM.ID = B.ITEM.ID " +
+            "WHERE I.ITEM.ID IN (:itemsIdList) AND B.STATUS = :status " +
+            "ORDER BY B.START.TIME DESC")
+    List<Booking> findByItemIdInAndStatus(@Param("itemsIdList") List<Long> itemsIdList,@Param("status") String status);*/
+
+    /*@Query("SELECT B FROM Bookings AS B " +
+            "WHERE B.ITEM.ID = :itemId")*/
+    List<Booking> findByItemId(@Param("itemId") Long itemId);
 }

@@ -1,10 +1,13 @@
 package ru.practicum.shareit.item.model;
 
 import lombok.*;
-import ru.practicum.shareit.booking.dto.BookingDto;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Getter
@@ -26,19 +29,39 @@ public class Item {
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @Column(name = "AVALABLE")
+    @Column(name = "AVAILABLE")
     private Boolean available;
 
     @ManyToOne
     @JoinColumn(name = "USER_ID")
     private User owner;
 
-    private BookingDto lastBooking;
+    @Transient
+    private Booking nextBooking;
 
-    private BookingDto nextBooking;
+    @Transient
+    private Booking lastBooking;
 
-    public static class BookingDto {
+    @Transient
+    private List<Booking> bookings = new ArrayList<>();
 
+    @Transient
+    private List<Comment> comments = new ArrayList<>();
+
+    public void addComment(Comment comment) {
+        comments.add(comment);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Item item = (Item) o;
+        return Objects.equals(id, item.id) && Objects.equals(name, item.name) && Objects.equals(description, item.description) && Objects.equals(available, item.available) && Objects.equals(owner, item.owner);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, description, available, owner);
+    }
 }

@@ -5,12 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
-import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.service.BookingService;
-import ru.practicum.shareit.item.dto.ItemResponseDto;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -42,7 +39,7 @@ public class BookingController {
     }
 
     @PatchMapping("/{bookingId}")
-    public BookingDto update(@RequestHeader("X-Sharer-User-Id") long userId,
+    public BookingResponseDto update(@RequestHeader("X-Sharer-User-Id") long userId,
                              @PathVariable Long bookingId,
                              @PathVariable Boolean approved
                              ) {
@@ -52,8 +49,8 @@ public class BookingController {
         return null;
     }
 
-    @GetMapping("/{bookingId")
-    public BookingDto getById(@RequestHeader("X-Sharer-User-Id") long userId,
+    @GetMapping("/{bookingId}")
+    public BookingResponseDto getById(@RequestHeader("X-Sharer-User-Id") long userId,
                               @PathVariable Long bookingId
                               ) {
         log.info("Request received: GET /bookings/id={}", bookingId);

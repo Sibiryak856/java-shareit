@@ -5,9 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.shareit.item.dto.ItemCreateDto;
-import ru.practicum.shareit.item.dto.ItemResponseDto;
-import ru.practicum.shareit.item.dto.ItemUpdateDto;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
@@ -29,7 +27,7 @@ public class ItemController {
     @GetMapping
     public List<ItemResponseDto> getAllByUser(@RequestHeader("X-Sharer-User-Id") long userId) {
         log.info("Request received: GET /items for user id= {}", userId);
-        List<ItemResponseDto> items = itemService.getAllByUser(userId);
+        List<ItemResponseDto> items = itemService.getAllByOwner(userId);
         log.info("Request GET /items processed: {}", items);
         return items;
     }
@@ -38,7 +36,7 @@ public class ItemController {
     public ItemResponseDto getItem(@PathVariable Long itemId,
                                    @RequestHeader("X-Sharer-User-Id") long userId) {
         log.info("Request received: GET /items/id={}", itemId);
-        ItemResponseDto item = itemService.getItem(itemId);
+        ItemResponseDto item = itemService.getItem(itemId, userId);
         log.info("Request GET /items/id processed: {}", item);
         return item;
     }
@@ -77,5 +75,16 @@ public class ItemController {
         List<ItemResponseDto> searchedItems = itemService.getSearcherItems(text);
         log.debug("Request GET /items/search processed: searchedItems: {}", searchedItems);
         return searchedItems;
+    }
+
+    @ResponseStatus(HttpStatus.CREATED)
+    @PostMapping("/{itemId}/comment")
+    public CommentResponseDto create(@RequestHeader("X-Sharer-User-Id") long userId,
+                                     @PathVariable Long itemId,
+                                     @Validated @RequestBody CommentCreateDto commentDto) {
+        log.debug("Request received: POST /items/{itemId}/comment: {}", commentDto);
+        CommentResponseDto createdComment = itemService.create(commentDto, userId, itemId);
+        log.info("Request POST /items/{itemId}/comment processed: comment={} is created", createdComment);
+        return createdComment;
     }
 }

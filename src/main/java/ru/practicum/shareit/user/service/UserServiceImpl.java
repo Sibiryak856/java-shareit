@@ -5,14 +5,13 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.DuplicateException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.repository.ItemDao;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserDao;
+import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -20,21 +19,21 @@ import java.util.stream.Collectors;
 @Service
 public class UserServiceImpl implements UserService {
 
-    public UserDao userDao;
-    private ItemDao itemDao;
+    public UserRepository userRepository;
+    private ItemRepository itemRepository;
     private UserMapper userMapper;
 
     @Autowired
-    public UserServiceImpl(UserDao userDao, ItemDao itemDao, UserMapper userMapper) {
-        this.userDao = userDao;
-        this.itemDao = itemDao;
+    public UserServiceImpl(UserRepository userRepository, ItemRepository itemRepository, UserMapper userMapper) {
+        this.userRepository = userRepository;
+        this.itemRepository = itemRepository;
         this.userMapper = userMapper;
     }
 
 
     @Override
     public List<UserResponseDto> getAll() {
-        return userDao.findAll().stream()
+        return userRepository.findAll().stream()
                 .map(u -> userMapper.toDto(u))
                 .collect(Collectors.toList());
     }
@@ -42,7 +41,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDto getUser(Long id) {
         return userMapper.toDto(
-                userDao.findById(id)
+                userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", id)))
         );
     }
@@ -50,31 +49,31 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDto create(UserCreateDto userCreateDto) {
         try {
-            return userMapper.toDto(userDao.save(userMapper.toUser(userCreateDto)));
+            return userMapper.toDto(userRepository.save(userMapper.toUser(userCreateDto)));
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateException("Duplicate data");
+            throw new DuplicateException(e.getCause().getCause().getMessage());
         }
     }
 
     @Override
     public UserResponseDto update(Long id, UserUpdateDto userUpdateDto) {
-        User updatingUser = userDao.findById(id)
+        User updatingUser = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         userUpdateDto.setId(id);
         try {
-            User updatedUser = userDao.save(userMapper.update(userUpdateDto, updatingUser));
+            User updatedUser = userRepository.save(userMapper.update(userUpdateDto, updatingUser));
             return userMapper.toDto(updatedUser);
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateException("Duplicate data");
+            throw new DuplicateException(e.getCause().getCause().getMessage());
         }
     }
 
     @Override
     public void delete(Long id) {
-        if (!userDao.existsById(id)) {
+        if (!userRepository.existsById(id)) {
             throw new NotFoundException("Deleting user not found");
         }
-        itemDao.deleteByUserId(id);
-        userDao.deleteById(id);
+        itemRepository.deleteByOwnerId(id);
+        userRepository.deleteById(id);
     }
 }
