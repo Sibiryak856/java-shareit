@@ -3,14 +3,10 @@ package ru.practicum.shareit.booking.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import ru.practicum.shareit.booking.StartBeforeEnd;
+import ru.practicum.shareit.booking.validation.StartBeforeEnd;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
-
-/**
- * TODO add @Validation endNotBeforeStart
- */
 
 @Data
 @StartBeforeEnd

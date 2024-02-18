@@ -112,7 +112,7 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", ownerId)));
         Item deletingItem = itemRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Deleting item not found"));
-        if (!deletingItem.getOwner().equals(user)) {
+        if (!deletingItem.getOwner().getId().equals(ownerId)) {
             throw new NotAccessException("Only item's owner can delete data");
         }
         itemRepository.deleteById(id);

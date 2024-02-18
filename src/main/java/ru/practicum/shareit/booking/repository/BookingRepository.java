@@ -67,11 +67,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByItemOwnerIdAndStatusOrderByStartTimeDesc(
             @Param("userId") long userId, @Param("status") BookingStatus status);
 
-    /**
-     * TODO add sort and pageable
-     */
-
-    List<Booking> findAllByItemIdAndStatusNotLike(/*@Param("itemId")*/Long itemId, BookingStatus status);
+    List<Booking> findAllByItemIdAndStatusNotLike(Long itemId, BookingStatus status);
 
 
     @Query("SELECT b FROM Booking AS b " +

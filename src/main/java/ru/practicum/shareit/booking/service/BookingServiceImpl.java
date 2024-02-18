@@ -16,7 +16,6 @@ import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -48,7 +47,7 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException(
                     String.format("This item id=%d is unavailable", bookingDto.getItemId()));
         }
-        if (item.getOwner().equals(user)) {
+        if (item.getOwner().getId().equals(userId)) {
             throw new NotAccessException("Owner can't book his own item");
         }
         Booking booking = bookingMapper.toBooking(bookingDto, BookingStatus.WAITING);
@@ -73,8 +72,6 @@ public class BookingServiceImpl implements BookingService {
                     String.format("Status has already changed to %s", booking.getStatus()));
         }
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        //item.setAvailable(FALSE);
-        //itemRepository.save(item);
         return bookingMapper.toBookingResponseDto(bookingRepository.save(booking));
     }
 
