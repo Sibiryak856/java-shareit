@@ -18,7 +18,7 @@ public class ErrorResponse {
         this.error = stackTraceToString(e);
     }
 
-    private String stackTraceToString (Throwable e) {
+    private String stackTraceToString(Throwable e) {
         StringWriter writer = new StringWriter();
         e.printStackTrace(new PrintWriter(writer));
         String exceptionAsString = writer.toString();

@@ -2,7 +2,6 @@ package ru.practicum.shareit.user.mapper;
 
 import org.mapstruct.*;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserResponseDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;

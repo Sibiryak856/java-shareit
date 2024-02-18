@@ -9,11 +9,11 @@ import javax.validation.constraintvalidation.ValidationTarget;
 import java.time.LocalDateTime;
 
 @SupportedValidationTarget(ValidationTarget.ANNOTATED_ELEMENT)
-public class StartBeforeEndValidator implements ConstraintValidator<StartBeforeEnd, BookingCreateDto>{
+public class StartBeforeEndValidator implements ConstraintValidator<StartBeforeEnd, BookingCreateDto> {
 
     @Override
     public boolean isValid(BookingCreateDto booking, ConstraintValidatorContext context) {
-        if (booking.getStartTime() == null ||booking.getEndTime() == null || booking.getItemId() == null) {
+        if (booking.getStartTime() == null || booking.getEndTime() == null || booking.getItemId() == null) {
             return false;
         }
         if (!(booking.getStartTime() instanceof LocalDateTime)
