@@ -10,18 +10,7 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    /*@Query("SELECT C FROM COMMENTS AS C " +
-            "WHERE C.ITEM_ID = :itemId")*/
     List<Comment> findAllByItemIdOrderByCreatedDesc(@Param("itemId") Long itemId);
 
-    /*@Query("SELECT C FROM COMMENTS AS C " +
-            "WHERE C.ITEM_ID IN (itemsId)")*/
     List<Comment> findAllByItemIdIn(@Param("itemsId") List<Long> itemsId);
-
-
-    /**
-     * TODO add delete
-     */
-
-
 }

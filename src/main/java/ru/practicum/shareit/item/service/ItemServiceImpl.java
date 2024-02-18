@@ -56,7 +56,7 @@ public class ItemServiceImpl implements ItemService {
         List<Booking> bookingList = bookingRepository
                 .findAllByItemIdInAndStatusNotLike(userItems
                         .stream()
-                        .map(i -> i.getId())
+                        .map(Item::getId)
                         .collect(Collectors.toList()), BookingStatus.REJECTED);
         if (userItems.isEmpty()) {
             return Collections.emptyList();

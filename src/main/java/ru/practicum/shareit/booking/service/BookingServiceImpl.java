@@ -100,7 +100,6 @@ public class BookingServiceImpl implements BookingService {
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
         List<Booking> requestedBooking;
-        LocalDateTime now = LocalDateTime.now();
         switch (bookingState) {
             case ALL:
                 requestedBooking = bookingRepository.findAllByBookerIdOrderByStartTimeDesc(userId);
@@ -139,7 +138,6 @@ public class BookingServiceImpl implements BookingService {
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
         List<Booking> requestedBooking;
-        LocalDateTime now = LocalDateTime.now();
         switch (bookingState) {
             case ALL:
                 requestedBooking = bookingRepository.findAllBookingsByOwner(userId);
@@ -168,9 +166,5 @@ public class BookingServiceImpl implements BookingService {
                 requestedBooking = Collections.emptyList();
         }
         return bookingMapper.toListBookingResponseDto(requestedBooking);
-
-        /**
-         * TODO delete method
-         */
     }
 }
