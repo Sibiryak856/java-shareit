@@ -12,7 +12,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     /*@Query("SELECT I FROM ITEMS AS I " +
             "WHERE I.USER.ID = :userId")*/
-    List<Item> findAllByOwnerId(@Param("userId") Long userId);
+    List<Item> findAllByOwnerIdOrderByIdAsc(@Param("userId") Long userId);
 
     /*@Query("SELECT I FROM ITEMS AS I " +
             "WHERE I.AVAILABLE = true " +

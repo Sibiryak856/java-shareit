@@ -20,10 +20,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
-import static java.lang.Boolean.FALSE;
-import static ru.practicum.shareit.booking.BookingState.REJECTED;
-import static ru.practicum.shareit.booking.BookingState.WAITING;
-
 @Service
 public class BookingServiceImpl implements BookingService {
 
@@ -52,6 +48,9 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException(
                     String.format("This item id=%d is unavailable", bookingDto.getItemId()));
         }
+        if (item.getOwner().equals(user)) {
+            throw new NotAccessException("Owner can't book his own item");
+        }
         Booking booking = bookingMapper.toBooking(bookingDto, BookingStatus.WAITING);
         booking.setBooker(user);
         booking.setItem(item);
@@ -74,10 +73,9 @@ public class BookingServiceImpl implements BookingService {
                     String.format("Status has already changed to %s", booking.getStatus()));
         }
         booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        item.setAvailable(FALSE);
-        itemRepository.save(item);
-        bookingRepository.save(booking);
-        return bookingMapper.toBookingResponseDto(booking);
+        //item.setAvailable(FALSE);
+        //itemRepository.save(item);
+        return bookingMapper.toBookingResponseDto(bookingRepository.save(booking));
     }
 
     @Override
@@ -108,21 +106,24 @@ public class BookingServiceImpl implements BookingService {
                 requestedBooking = bookingRepository.findAllByBookerIdOrderByStartTimeDesc(userId);
                 break;
             case CURRENT:
-                requestedBooking = bookingRepository.findAllByBookerIdAndStartTimeBeforeAndEndTimeAfter(userId, now, now);
+                requestedBooking = bookingRepository
+                        .findCurrentBookingsByBooker(userId);
                 break;
             case FUTURE:
                 requestedBooking = bookingRepository
-                        .findByBookerIdAndStartTimeAfterOrderByStartTimeDesc(userId, now);
+                        .findFutureBookingsByBooker(userId);
                 break;
             case PAST:
                 requestedBooking = bookingRepository
-                        .findByBookerIdAndEndTimeBeforeOrderByStartTimeDesc(userId, LocalDateTime.now());
+                        .findPastBookingsByBooker(userId);
                 break;
             case REJECTED:
-                requestedBooking = bookingRepository.findBookingByBookerIdAndStatusOrderByStartTimeDesc(userId, REJECTED.name());
+                requestedBooking = bookingRepository
+                        .findAllByBookerIdAndStatusOrderByStartTimeDesc(userId, BookingStatus.REJECTED);
                 break;
             case WAITING:
-                requestedBooking = bookingRepository.findBookingByBookerIdAndStatusOrderByStartTimeDesc(userId, WAITING.name());
+                requestedBooking = bookingRepository
+                        .findAllByBookerIdAndStatusOrderByStartTimeDesc(userId, BookingStatus.WAITING);
                 break;
             default:
                 requestedBooking = Collections.emptyList();
@@ -141,23 +142,27 @@ public class BookingServiceImpl implements BookingService {
         LocalDateTime now = LocalDateTime.now();
         switch (bookingState) {
             case ALL:
-                requestedBooking = bookingRepository.findAllByItemOwnerId(userId);
+                requestedBooking = bookingRepository.findAllBookingsByOwner(userId);
                 break;
             case CURRENT:
                 requestedBooking = bookingRepository
-                        .findAllByItemOwnerIdAndStartTimeBeforeAndEndTimeAfter(userId, LocalDateTime.now(), LocalDateTime.now());
+                        .findCurrentBookingsByOwner(userId);
                 break;
             case FUTURE:
-                requestedBooking = bookingRepository.findAllByItemOwnerIdAndStartTimeAfter(userId, now);
+                requestedBooking = bookingRepository
+                        .findFutureBookingsByOwner(userId);
                 break;
             case PAST:
-                requestedBooking = bookingRepository.findAllByItemOwnerIdAndEndTimeBefore(userId, now);
+                requestedBooking = bookingRepository
+                        .findPastBookingsByOwner(userId);
                 break;
             case REJECTED:
-                requestedBooking = bookingRepository.findBookingByItemOwnerIdAndStatus(userId, REJECTED.name());
+                requestedBooking = bookingRepository
+                        .findAllByItemOwnerIdAndStatusOrderByStartTimeDesc(userId, BookingStatus.REJECTED);
                 break;
             case WAITING:
-                requestedBooking = bookingRepository.findBookingByItemOwnerIdAndStatus(userId, WAITING.name());
+                requestedBooking = bookingRepository
+                        .findAllByItemOwnerIdAndStatusOrderByStartTimeDesc(userId, BookingStatus.WAITING);
                 break;
             default:
                 requestedBooking = Collections.emptyList();

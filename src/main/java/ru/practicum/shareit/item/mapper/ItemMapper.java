@@ -13,13 +13,15 @@ import java.util.List;
 import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 
 @Component
-@Mapper(componentModel = SPRING)
+@Mapper(componentModel = SPRING,
+        uses = CommentMapper.class)
 public interface ItemMapper {
 
     ItemResponseDto toItemDto(Item item);
 
     Item toItem(ItemCreateDto itemCreateDto);
 
+    @Mapping(source = "booker.id", target = "bookerId")
     ItemResponseDto.BookingDto map(Booking booking);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

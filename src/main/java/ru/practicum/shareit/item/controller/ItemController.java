@@ -77,7 +77,6 @@ public class ItemController {
         return searchedItems;
     }
 
-    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/{itemId}/comment")
     public CommentResponseDto create(@RequestHeader("X-Sharer-User-Id") long userId,
                                      @PathVariable Long itemId,

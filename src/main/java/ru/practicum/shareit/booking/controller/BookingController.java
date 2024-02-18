@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.service.BookingService;
@@ -40,13 +41,13 @@ public class BookingController {
 
     @PatchMapping("/{bookingId}")
     public BookingResponseDto update(@RequestHeader("X-Sharer-User-Id") long userId,
-                             @PathVariable Long bookingId,
-                             @PathVariable Boolean approved
-                             ) {
+                                     @PathVariable Long bookingId,
+                                     @RequestParam Boolean approved
+    ) {
         log.info("Request received: PATCH /bookings: id={}", bookingId);
-        BookingResponseDto createdBooking = bookingService.update(bookingId, userId, approved);
-        log.info("Request PATCH /bookings processed: booking={} is created", createdBooking);
-        return null;
+        BookingResponseDto updatedBooking = bookingService.update(bookingId, userId, approved);
+        log.info("Request PATCH /bookings processed: booking={} is created", updatedBooking);
+        return updatedBooking;
     }
 
     @GetMapping("/{bookingId}")
@@ -56,21 +57,25 @@ public class BookingController {
         log.info("Request received: GET /bookings/id={}", bookingId);
         BookingResponseDto booking = bookingService.getBooking(bookingId, userId);
         log.info("Request GET /bookings/id processed: {}", booking);
-        return null;
+        return booking;
     }
 
     @GetMapping
-    public List<BookingResponseDto> getAllByUserQuery(@RequestHeader("X-Sharer-User-Id") long userId,
-                                              @RequestParam(defaultValue = "ALL", required = false) String state) {
+    public List<BookingResponseDto> getAllByUserQuery(
+            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestParam(defaultValue = "ALL", required = false) String state
+    ) {
         log.debug("Request received: GET /bookings");
         List<BookingResponseDto> searchedBookings = bookingService.getAllByUserQuery(userId, state);
         log.debug("Request GET /bookings processed: searchedBookings: {}", searchedBookings);
-        return null;
+        return searchedBookings;
     }
 
     @GetMapping("/owner")
-    public List<BookingResponseDto> getAllByOwnerQuery(@RequestHeader("X-Sharer-User-Id") long userId,
-                                            @RequestParam(defaultValue = "ALL", required = false) String state) {
+    public List<BookingResponseDto> getAllByOwnerQuery(
+            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestParam(defaultValue = "ALL", required = false) String state
+    ) {
         log.debug("Request received: GET /bookings/owner");
         List<BookingResponseDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, state);
         log.debug("Request GET /bookings/owner processed: searchedBookings: {}", searchedBookings);

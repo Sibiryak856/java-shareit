@@ -48,35 +48,39 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemResponseDto> getAllByOwner(Long userId) {
+        LocalDateTime now = LocalDateTime.now();
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException(String.format("User id=%d not found", userId));
         }
-        List<Item> userItems = itemRepository.findAllByOwnerId(userId);
+        List<Item> userItems = itemRepository.findAllByOwnerIdOrderByIdAsc(userId);
+        List<Booking> bookingList = bookingRepository
+                .findAllByItemIdInAndStatusNotLike(userItems
+                        .stream()
+                        .map(i -> i.getId())
+                        .collect(Collectors.toList()), BookingStatus.REJECTED);
         if (userItems.isEmpty()) {
             return Collections.emptyList();
         }
-        /*
-        LocalDateTime now = LocalDateTime.now();
         for (Item item : userItems) {
-            item.setLastBooking(getLastBooking(item.getBookings(), now));
-            item.setNextBooking(getNextBooking(item.getBookings(), now));
-        }*/
+            item.setLastBooking(getLastBooking(bookingList, item.getId(), now));
+            item.setNextBooking(getNextBooking(bookingList, item.getId(), now));
+        }
         return itemMapper.toListItemResponseDto(userItems);
     }
 
     @Override
     public ItemResponseDto getItem(Long itemId, long userId) {
+        LocalDateTime now = LocalDateTime.now();
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item id=%d not found", itemId)));
-        List<Booking> bookingList = bookingRepository.findByItemId(itemId);
+        List<Booking> bookingList = bookingRepository.findAllByItemIdAndStatusNotLike(itemId, BookingStatus.REJECTED);
         if (item.getOwner().getId().equals(userId)) {
             if (!bookingList.isEmpty()) {
-                item.setNextBooking(getNextBooking(bookingList, LocalDateTime.now()));
-                item.setLastBooking(getLastBooking(bookingList, LocalDateTime.now()));
+                item.setNextBooking(getNextBooking(bookingList, itemId, now));
+                item.setLastBooking(getLastBooking(bookingList, itemId, now));
             }
         }
-        //item.setBookings(bookingList);
-        item.setComments(commentRepository.findAllByItemId(itemId));
+        item.setComments(commentRepository.findAllByItemIdOrderByCreatedDesc(itemId));
         return itemMapper.toItemDto(item);
     }
 
@@ -128,7 +132,7 @@ public class ItemServiceImpl implements ItemService {
         if (!itemsComments.isEmpty()) {
             for (Comment comment : itemsComments) {
                 for (Item item : items) {
-                    if (comment.getItem().equals(item)) {
+                    if (comment.getItem().getId().equals(item.getId())) {
                         item.addComment(comment);
                     }
                 }
@@ -140,43 +144,36 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentResponseDto create(CommentCreateDto commentDto, long userId, Long itemId) {
+        commentDto.setCreated(LocalDateTime.now());
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", userId)));
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item id=%d not found", itemId)));
         List<Booking> userBookings = bookingRepository
-                .findByBookerIdAndEndTimeBeforeOrderByStartTimeDesc(userId, LocalDateTime.now());
-        //Comment comment;
-        if (userBookings.stream().noneMatch(booking -> booking.getItem().equals(item) &&
-                booking.getStatus() == BookingStatus.APPROVED)) {
-            throw new NotAccessException(String.format("User id=%d didn't book this item id=%d", userId, itemId));
+                .findPastBookingsByBookerAndItemAndStatus(userId, itemId, BookingStatus.APPROVED);
+        if (userBookings.isEmpty()) {
+            throw new IllegalArgumentException(String.format("User id=%d didn't book this item id=%d", userId, itemId));
         }
-        /*for (Booking booking : userBookings) {
-            if (booking.getItem().equals(item)) {
-                comment = commentRepository
-                        .save(commentMapper.toComment(commentDto, user, item, LocalDateTime.now()));
-                return commentMapper.toCommentDto(comment);
-            }
-        }*/
-        Comment comment = commentRepository
-                .save(commentMapper.toComment(commentDto, LocalDateTime.now()));
+        Comment comment = commentMapper.toComment(commentDto);
         comment.setItem(item);
         comment.setAuthor(user);
-        return commentMapper.toCommentResponseDto(comment);
+        return commentMapper.toCommentResponseDto(commentRepository.save(comment));
     }
 
-    private Booking getLastBooking(List<Booking> bookingList, LocalDateTime now) {
+    private Booking getLastBooking(List<Booking> bookingList, Long itemId, LocalDateTime now) {
         return bookingList.stream()
                 .sorted(Comparator.comparing(Booking::getEndTime).reversed())
-                .filter(booking -> now.isAfter(booking.getEndTime()))
+                .filter(booking -> booking.getItem().getId().equals(itemId))
+                .filter(booking -> booking.getEndTime().isBefore(now))
                 .findFirst()
                 .orElse(null);
     }
 
-    private Booking getNextBooking(List<Booking> bookingList, LocalDateTime now) {
+    private Booking getNextBooking(List<Booking> bookingList, Long itemId, LocalDateTime now) {
         return bookingList.stream()
                 .sorted(Comparator.comparing(Booking::getStartTime))
-                .filter(booking -> now.isBefore(booking.getStartTime()))
+                .filter(booking -> booking.getItem().getId().equals(itemId))
+                .filter(booking -> booking.getStartTime().isAfter(now))
                 .findFirst()
                 .orElse(null);
     }

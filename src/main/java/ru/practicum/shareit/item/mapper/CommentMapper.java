@@ -14,9 +14,10 @@ import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 @Mapper(componentModel = SPRING)
 public interface CommentMapper {
 
+    @Mapping(source = "author.name", target = "authorName")
     CommentResponseDto toCommentResponseDto(Comment comment);
 
-    Comment toComment(CommentCreateDto commentDto, LocalDateTime created);
+    Comment toComment(CommentCreateDto commentDto);
 
     List<CommentResponseDto> toListCommentResponseDto(List<Comment> comments);
 }

@@ -1,5 +1,6 @@
 package ru.practicum.shareit.booking.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import ru.practicum.shareit.booking.model.BookingStatus;
 
@@ -10,8 +11,10 @@ public class BookingResponseDto {
 
     Long id;
 
+    @JsonProperty("start")
     LocalDateTime startTime;
 
+    @JsonProperty("end")
     LocalDateTime endTime;
 
     BookingStatus status;
