@@ -164,7 +164,7 @@ public class ItemServiceImpl implements ItemService {
         return bookingList.stream()
                 .sorted(Comparator.comparing(Booking::getEndTime).reversed())
                 .filter(booking -> booking.getItem().getId().equals(itemId))
-                .filter(booking -> booking.getEndTime().isBefore(now))
+                .filter(booking -> booking.getEndTime().isBefore(now) || booking.getStartTime().isBefore(now))
                 .findFirst()
                 .orElse(null);
     }
