@@ -16,21 +16,21 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT b FROM Booking AS b " +
             "WHERE b.booker.id = :userId " +
-            "AND b.startTime <= CURRENT_TIMESTAMP " +
-            "AND b.endTime >= CURRENT_TIMESTAMP " +
+            "AND b.startTime < CURRENT_TIMESTAMP " +
+            "AND b.endTime > CURRENT_TIMESTAMP " +
             "ORDER BY b.startTime DESC")
     List<Booking> findCurrentBookingsByBooker(
             @Param("userId") long userId);
 
     @Query("SELECT b FROM Booking AS b " +
             "WHERE b.booker.id = :userId " +
-            "AND b.startTime >= CURRENT_TIMESTAMP " +
+            "AND b.startTime > CURRENT_TIMESTAMP " +
             "ORDER BY b.startTime DESC")
     List<Booking> findFutureBookingsByBooker(@Param("userId") long userId);
 
     @Query("SELECT b FROM Booking AS b " +
             "WHERE b.booker.id = :userId " +
-            "AND b.endTime <= CURRENT_TIMESTAMP " +
+            "AND b.endTime < CURRENT_TIMESTAMP " +
             "ORDER BY b.startTime DESC")
     List<Booking> findPastBookingsByBooker(@Param("userId") long userId);
 
@@ -43,20 +43,20 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("SELECT b FROM Booking AS b " +
             "WHERE b.item.owner.id = :userId " +
-            "AND b.startTime <= CURRENT_TIMESTAMP " +
-            "AND b.endTime >= CURRENT_TIMESTAMP " +
+            "AND b.startTime < CURRENT_TIMESTAMP " +
+            "AND b.endTime > CURRENT_TIMESTAMP " +
             "ORDER BY b.startTime DESC")
     List<Booking> findCurrentBookingsByOwner(@Param("userId") long userId);
 
     @Query("SELECT b FROM Booking AS b " +
             "WHERE b.item.owner.id = :userId " +
-            "AND b.startTime >= CURRENT_TIMESTAMP " +
+            "AND b.startTime > CURRENT_TIMESTAMP " +
             "ORDER BY b.startTime DESC")
     List<Booking> findFutureBookingsByOwner(@Param("userId") long userId);
 
     @Query("SELECT b FROM Booking AS b " +
             "WHERE b.item.owner.id = :userId " +
-            "AND b.startTime >= CURRENT_TIMESTAMP " +
+            "AND b.endTime < CURRENT_TIMESTAMP " +
             "ORDER BY b.startTime DESC")
     List<Booking> findPastBookingsByOwner(@Param("userId") long userId);
 
@@ -67,12 +67,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByItemOwnerIdAndStatusOrderByStartTimeDesc(
             @Param("userId") long userId, @Param("status") BookingStatus status);
 
+    @Query("SELECT b FROM Booking AS b " +
+            "WHERE b.item.id = :itemId " +
+            "AND b.status NOT LIKE :status")
     List<Booking> findAllByItemIdAndStatusNotLike(Long itemId, BookingStatus status);
 
 
     @Query("SELECT b FROM Booking AS b " +
             "WHERE b.item.id IN :itemsId " +
-            "AND b.status <> :status")
+            "AND b.status NOT LIKE :status")
     List<Booking> findAllByItemIdInAndStatusNotLike(
             @Param("itemsId") List<Long> itemsId, @Param("status") BookingStatus status);
 
