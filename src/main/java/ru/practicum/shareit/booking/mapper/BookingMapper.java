@@ -3,7 +3,7 @@ package ru.practicum.shareit.booking.mapper;
 import org.mapstruct.*;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
-import ru.practicum.shareit.booking.dto.BookingResponseDto;
+import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.item.model.Item;
@@ -17,14 +17,15 @@ import static org.mapstruct.MappingConstants.ComponentModel.SPRING;
 @Mapper(componentModel = SPRING)
 public interface BookingMapper {
 
-    BookingResponseDto toBookingResponseDto(Booking booking);
+    BookingDto toBookingDto(Booking booking);
 
-    Booking toBooking(BookingCreateDto bookingCreateDto, BookingStatus status);
+    @Mapping(target = "id", ignore = true)
+    Booking toBooking(BookingCreateDto bookingCreateDto, Item item, User booker, BookingStatus status);
 
-    BookingResponseDto.UserDto map(User user);
+    BookingDto.UserDto map(User user);
 
-    BookingResponseDto.ItemDto map(Item item);
+    BookingDto.ItemDto map(Item item);
 
-    List<BookingResponseDto> toListBookingResponseDto(List<Booking> bookingList);
+    List<BookingDto> toListBookingDto(List<Booking> bookingList);
 
 }

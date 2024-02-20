@@ -1,12 +1,9 @@
 package ru.practicum.shareit.item.model;
 
 import lombok.*;
-import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.user.model.User;
 
 import javax.persistence.*;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Getter
@@ -34,20 +31,4 @@ public class Item {
     @ManyToOne
     @JoinColumn(name = "USER_ID")
     private User owner;
-
-    @Transient
-    private Booking nextBooking;
-
-    @Transient
-    private Booking lastBooking;
-
-    @Transient
-    private List<Booking> bookings = new ArrayList<>();
-
-    @Transient
-    private List<Comment> comments = new ArrayList<>();
-
-    public void addComment(Comment comment) {
-        comments.add(comment);
-    }
 }

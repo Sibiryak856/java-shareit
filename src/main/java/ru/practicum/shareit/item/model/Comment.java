@@ -23,7 +23,7 @@ public class Comment {
     @Column(name = "TEXT")
     private String text;
 
-    @ManyToOne
+    @ManyToOne(fetch =  FetchType.LAZY)
     @JoinColumn(name = "ITEM_ID")
     private Item item;
 

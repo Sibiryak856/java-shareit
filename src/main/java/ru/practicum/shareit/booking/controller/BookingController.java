@@ -5,8 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
-import ru.practicum.shareit.booking.dto.BookingResponseDto;
+import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
@@ -27,53 +28,57 @@ public class BookingController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public BookingResponseDto create(@RequestHeader("X-Sharer-User-Id") long userId,
+    public BookingDto create(@RequestHeader("X-Sharer-User-Id") long userId,
                              @Valid @RequestBody BookingCreateDto bookingDto) {
         log.info("Request received: POST /bookings: {}", bookingDto);
-        BookingResponseDto createdBooking = bookingService.create(bookingDto, userId);
+        BookingDto createdBooking = bookingService.create(bookingDto, userId);
         log.info("Request POST /bookings processed: booking={} is created", createdBooking);
         return createdBooking;
     }
 
     @PatchMapping("/{bookingId}")
-    public BookingResponseDto update(@RequestHeader("X-Sharer-User-Id") long userId,
-                                     @PathVariable Long bookingId,
-                                     @RequestParam Boolean approved
+    public BookingDto update(@RequestHeader("X-Sharer-User-Id") long userId,
+                             @PathVariable Long bookingId,
+                             @RequestParam Boolean approved
     ) {
         log.info("Request received: PATCH /bookings: id={}", bookingId);
-        BookingResponseDto updatedBooking = bookingService.update(bookingId, userId, approved);
+        BookingDto updatedBooking = bookingService.update(bookingId, userId, approved);
         log.info("Request PATCH /bookings processed: booking={} is created", updatedBooking);
         return updatedBooking;
     }
 
     @GetMapping("/{bookingId}")
-    public BookingResponseDto getById(@RequestHeader("X-Sharer-User-Id") long userId,
+    public BookingDto getById(@RequestHeader("X-Sharer-User-Id") long userId,
                               @PathVariable Long bookingId
                               ) {
         log.info("Request received: GET /bookings/id={}", bookingId);
-        BookingResponseDto booking = bookingService.getBooking(bookingId, userId);
+        BookingDto booking = bookingService.getBooking(bookingId, userId);
         log.info("Request GET /bookings/id processed: {}", booking);
         return booking;
     }
 
     @GetMapping
-    public List<BookingResponseDto> getAllByUserQuery(
+    public List<BookingDto> getAllByUserQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(defaultValue = "ALL", required = false) String state
     ) {
         log.debug("Request received: GET /bookings");
-        List<BookingResponseDto> searchedBookings = bookingService.getAllByUserQuery(userId, state);
+        BookingState bookingState = BookingState.from(state)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
+        List<BookingDto> searchedBookings = bookingService.getAllByUserQuery(userId, bookingState);
         log.debug("Request GET /bookings processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;
     }
 
     @GetMapping("/owner")
-    public List<BookingResponseDto> getAllByOwnerQuery(
+    public List<BookingDto> getAllByOwnerQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(defaultValue = "ALL", required = false) String state
     ) {
         log.debug("Request received: GET /bookings/owner");
-        List<BookingResponseDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, state);
+        BookingState bookingState = BookingState.from(state)
+                .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
+        List<BookingDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, bookingState);
         log.debug("Request GET /bookings/owner processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;
     }

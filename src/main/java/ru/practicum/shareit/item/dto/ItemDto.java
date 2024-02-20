@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class ItemResponseDto {
+public class ItemDto {
     private Long id;
 
     private String name;
@@ -18,7 +18,7 @@ public class ItemResponseDto {
 
     private BookingDto nextBooking;
 
-    private List<CommentResponseDto> comments;
+    private List<CommentDto> comments;
 
     @Data
     public static class BookingDto {

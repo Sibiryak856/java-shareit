@@ -1,6 +1,7 @@
 package ru.practicum.shareit.exception;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -35,8 +36,8 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleDuplicateException(final DuplicateException e) {
-        String message = e.getMessage();
+    public ErrorResponse handleDataIntegrityViolationException(final DataIntegrityViolationException e) {
+        String message = e.getCause().getCause().getMessage();
         log.info(message);
         return new ErrorResponse(message);
     }
