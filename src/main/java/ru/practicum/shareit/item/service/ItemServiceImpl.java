@@ -20,6 +20,7 @@ import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Boolean.TRUE;
 
@@ -56,13 +57,43 @@ public class ItemServiceImpl implements ItemService {
             return Collections.emptyList();
         }
 
+        List<Long> itemsId = userItems.stream()
+                .map(ItemDto::getId)
+                .collect(Collectors.toList());
+
+        List<Booking> itemsBookings = bookingRepository
+                .findAllByItemIdInAndStatusNotLike(itemsId, BookingStatus.REJECTED);
+        Map<Long, List<Booking>> itemBookingsMap = new HashMap<>();
+        for (Booking booking : itemsBookings) {
+            Long id = booking.getItem().getId();
+            if (itemBookingsMap.get(id) == null) {
+                itemBookingsMap.put(id, new ArrayList<>());
+            }
+            List<Booking> bookings = itemBookingsMap.get(id);
+            bookings.add(booking);
+            itemBookingsMap.put(id, bookings);
+        }
+
+        List<Comment> itemsComments = commentRepository
+                .findAllByItemIdIn(itemsId, Sort.by("created").descending());
+        Map<Long, List<Comment>> itemsCommentsMap = new HashMap<>();
+        for (Comment comment : itemsComments) {
+            Long id = comment.getItem().getId();
+            if (itemsCommentsMap.get(id) == null) {
+                itemsCommentsMap.put(id, new ArrayList<>());
+            }
+            List<Comment> comments = itemsCommentsMap.get(id);
+            comments.add(comment);
+            itemsCommentsMap.put(id, comments);
+        }
+
         for (ItemDto itemDto : userItems) {
+            Long id = itemDto.getId();
             itemDto.setLastBooking(
-                    itemMapper.map(getLastBooking(itemDto.getId(), now)));
+                    itemMapper.map(getLastBooking(itemBookingsMap.get(id), now)));
             itemDto.setNextBooking(
-                    itemMapper.map(getNextBooking(itemDto.getId(), now)));
-            itemDto.setComments(commentMapper.toListCommentDto(
-                    commentRepository.findAllByItemId(itemDto.getId(), sort)));
+                    itemMapper.map(getNextBooking(itemBookingsMap.get(id), now)));
+            itemDto.setComments(commentMapper.toListCommentDto(itemsCommentsMap.get(itemDto.getId())));
         }
         return userItems;
     }
@@ -73,15 +104,17 @@ public class ItemServiceImpl implements ItemService {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item id=%d not found", itemId)));
         ItemDto itemDto = itemMapper.toItemDto(item);
+        List<Booking> itemBookings = bookingRepository
+                .findAllByItemIdAndStatusNotLike(
+                        itemId, BookingStatus.REJECTED, Sort.by("startTime").ascending());
         if (item.getOwner().getId().equals(userId)) {
             itemDto.setNextBooking(
-                    itemMapper.map(getNextBooking(itemId, now)));
+                    itemMapper.map(getNextBooking(itemBookings, now)));
             itemDto.setLastBooking(
-                    itemMapper.map(getLastBooking(itemId, now)));
+                    itemMapper.map(getLastBooking(itemBookings, now)));
         }
-        Sort sort = Sort.by("created").descending();
         itemDto.setComments(commentMapper
-                .toListCommentDto(commentRepository.findAllByItemId(itemId, sort)));
+                .toListCommentDto(commentRepository.findAllByItemId(itemId, Sort.by("created").descending())));
         return itemDto;
     }
 
@@ -125,11 +158,27 @@ public class ItemServiceImpl implements ItemService {
             return new ArrayList<>();
         }
         List<ItemDto> items = itemMapper.toListItemDto(
-                itemRepository.findAllByNameOrDescriptionIgnoreCaseContainingAndAvailableEquals(text, text, TRUE));
-        Sort sort = Sort.by("created").descending();
+                itemRepository.findAllAvailableBySearch(text.toLowerCase(), text.toLowerCase(), TRUE));
+
+        List<Long> itemsId = items.stream()
+                .map(ItemDto::getId)
+                .collect(Collectors.toList());
+
+        List<Comment> itemsComments = commentRepository
+                .findAllByItemIdIn(itemsId, Sort.by("created").descending());
+        Map<Long, List<Comment>> itemsCommentsMap = new HashMap<>();
+        for (Comment comment : itemsComments) {
+            Long id = comment.getItem().getId();
+            if (itemsCommentsMap.get(id) == null) {
+                itemsCommentsMap.put(id, new ArrayList<>());
+            }
+            List<Comment> comments = itemsCommentsMap.get(id);
+            comments.add(comment);
+            itemsCommentsMap.put(id, comments);
+        }
+
         for (ItemDto item : items) {
-            item.setComments(commentMapper.toListCommentDto(
-                    commentRepository.findAllByItemId(item.getId(), sort)));
+            item.setComments(commentMapper.toListCommentDto(itemsCommentsMap.get(item.getId())));
         }
         return items;
     }
@@ -150,23 +199,24 @@ public class ItemServiceImpl implements ItemService {
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
-    private Booking getLastBooking(Long itemId, LocalDateTime now) {
-        return bookingRepository
-                .findFirstByItemIdAndStartTimeBeforeAndStatusNotLike(
-                        itemId,
-                        now,
-                        BookingStatus.REJECTED,
-                        Sort.by("endTime").descending())
+    private Booking getLastBooking(List<Booking> bookings, LocalDateTime now) {
+        if (bookings == null) {
+            return null;
+        }
+        Collections.reverse(bookings);
+        return bookings.stream()
+                .filter(booking -> booking.getStartTime().isBefore(now))
+                .findFirst()
                 .orElse(null);
     }
 
-    private Booking getNextBooking(Long itemId, LocalDateTime now) {
-        return bookingRepository
-                .findFirstByItemIdAndStartTimeAfterAndStatusNotLike(
-                        itemId,
-                        now,
-                        BookingStatus.REJECTED,
-                        Sort.by("startTime").ascending())
+    private Booking getNextBooking(List<Booking> bookings, LocalDateTime now) {
+        if (bookings == null) {
+            return null;
+        }
+        return bookings.stream()
+                .filter(booking -> booking.getStartTime().isAfter(now))
+                .findFirst()
                 .orElse(null);
     }
 }
