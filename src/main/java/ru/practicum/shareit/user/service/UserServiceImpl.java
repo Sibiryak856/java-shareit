@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.user.dto.UserCreateDto;
-import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.mapper.UserMapper;
 import ru.practicum.shareit.user.model.User;
@@ -30,39 +30,37 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public List<UserResponseDto> getAll() {
-        return userRepository.getAll().stream()
+    public List<UserDto> getAll() {
+        return userRepository.findAll().stream()
                 .map(u -> userMapper.toDto(u))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public UserResponseDto getUser(Long id) {
+    public UserDto getUser(Long id) {
         return userMapper.toDto(
-                userRepository.getUser(id)
-                .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", id)))
+                userRepository.findById(id)
+                        .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", id)))
         );
     }
 
     @Override
-    public UserResponseDto create(UserCreateDto userCreateDto) {
-        return userMapper.toDto(userRepository.create(userMapper.toUser(userCreateDto)));
+    public UserDto create(UserCreateDto userCreateDto) {
+        return userMapper.toDto(userRepository.save(userMapper.toUser(userCreateDto)));
     }
 
     @Override
-    public UserResponseDto update(Long id, UserUpdateDto userUpdateDto) {
-        User updatingUser = userRepository.getUser(id)
+    public UserDto update(Long id, UserUpdateDto userUpdateDto) {
+        User updatingUser = userRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("User not found"));
         userUpdateDto.setId(id);
-        userRepository.update(userMapper.toUser(userUpdateDto));
-        return userMapper.toDto(userRepository.getUser(id).get());
+        User updatedUser = userRepository.save(userMapper.update(userUpdateDto, updatingUser));
+        return userMapper.toDto(updatedUser);
     }
 
     @Override
     public void delete(Long id) {
-        User deletingUser = userRepository.getUser(id)
-                .orElseThrow(() -> new NotFoundException("Deleting user not found"));
-        itemRepository.deleteAllByUser(id);
-        userRepository.delete(id);
+        itemRepository.deleteByOwnerId(id);
+        userRepository.deleteById(id);
     }
 }

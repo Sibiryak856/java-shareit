@@ -3,7 +3,7 @@ package ru.practicum.shareit.user.mapper;
 import org.mapstruct.*;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.user.dto.UserCreateDto;
-import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.model.User;
 
@@ -15,11 +15,13 @@ public interface UserMapper {
 
     User toUser(UserCreateDto userCreateDto);
 
-    User toUser(UserUpdateDto userUpdateDto);
-
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
     User update(User updating, @MappingTarget User targetUser);
 
-    UserResponseDto toDto(User user);
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    User update(UserUpdateDto userUpdateDto, @MappingTarget User targetUser);
+
+    UserDto toDto(User user);
 }

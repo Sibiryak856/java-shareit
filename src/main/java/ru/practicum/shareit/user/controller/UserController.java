@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserCreateDto;
-import ru.practicum.shareit.user.dto.UserResponseDto;
+import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
 import ru.practicum.shareit.user.service.UserServiceImpl;
 
@@ -27,35 +27,35 @@ public class UserController {
     }
 
     @GetMapping
-    public List<UserResponseDto> getAll() {
+    public List<UserDto> getAll() {
         log.info("Request received: GET /users");
-        List<UserResponseDto> users = userService.getAll();
+        List<UserDto> users = userService.getAll();
         log.info("Request GET /users processed: {}", users);
         return users;
     }
 
     @GetMapping("/{id}")
-    public UserResponseDto getUser(@PathVariable Long id) {
+    public UserDto getUser(@PathVariable Long id) {
         log.info("Request received: GET /users/id={}", id);
-        UserResponseDto user = userService.getUser(id);
+        UserDto user = userService.getUser(id);
         log.info("Request GET /users/id processed: {}", user);
         return user;
     }
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public UserResponseDto create(@Valid @RequestBody UserCreateDto userCreateDto) {
+    public UserDto create(@Valid @RequestBody UserCreateDto userCreateDto) {
         log.info("Request received: POST /users: {}", userCreateDto);
-        UserResponseDto createdUser = userService.create(userCreateDto);
+        UserDto createdUser = userService.create(userCreateDto);
         log.info("Request POST /users processed: user={} is created", createdUser);
         return createdUser;
     }
 
     @PatchMapping("/{id}")
-    public UserResponseDto update(@PathVariable Long id,
-                                  @RequestBody UserUpdateDto userUpdateDto) {
+    public UserDto update(@PathVariable Long id,
+                          @RequestBody UserUpdateDto userUpdateDto) {
         log.info("Request received: PATCH /users: {}", userUpdateDto);
-        UserResponseDto updatedUser = userService.update(id, userUpdateDto);
+        UserDto updatedUser = userService.update(id, userUpdateDto);
         log.info("Request PATCH /users processed: user: {} is updated", updatedUser);
         return updatedUser;
     }
