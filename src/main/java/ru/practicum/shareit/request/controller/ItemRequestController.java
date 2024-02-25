@@ -40,10 +40,11 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public List<ItemRequestDto> findAll(@RequestParam @Min(0) int from,
-                                        @RequestParam int size) {
+    public List<ItemRequestDto> findAll(@RequestHeader("X-Sharer-User-Id") long userId,
+                                        @Min(0) @RequestParam(defaultValue = "0") int from,
+                                        @Min(1) @RequestParam(defaultValue = "10") int size) {
         log.info("Request received: GET /requests/all");
-        List<ItemRequestDto> requests = requestService.findAll();
+        List<ItemRequestDto> requests = requestService.findAll(userId, from, size);
         log.info("Request GET /requests/all processed: {}", requests);
         return requests;
     }
@@ -57,9 +58,10 @@ public class ItemRequestController {
     }
 
     @GetMapping("/{requestId}")
-    public ItemRequestDto findById(@PathVariable Long requestId) {
+    public ItemRequestDto findById(@RequestHeader("X-Sharer-User-Id") long userId,
+                                   @PathVariable Long requestId) {
         log.info("Request received: GET /requests/id={}", requestId);
-        ItemRequestDto request = requestService.findById(requestId);
+        ItemRequestDto request = requestService.findById(userId, requestId);
         log.info("Request GET /requests/id processed: {}", request);
         return request;
     }

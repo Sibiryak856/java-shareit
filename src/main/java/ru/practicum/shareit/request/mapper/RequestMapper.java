@@ -3,7 +3,6 @@ package ru.practicum.shareit.request.mapper;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestCreateDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.model.ItemRequest;
@@ -25,6 +24,4 @@ public interface RequestMapper {
     ItemRequestDto toRequestDto(ItemRequest itemRequest);
 
     List<ItemRequestDto> toRequestDtosList(List<ItemRequest> itemRequests);
-
-    ItemRequestDto.ItemDto map(Item item);
 }

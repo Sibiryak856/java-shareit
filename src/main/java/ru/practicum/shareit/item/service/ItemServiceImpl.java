@@ -1,6 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.Booking;
@@ -45,14 +46,16 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getAllByOwner(Long userId) {
+    public List<ItemDto> getAllByOwner(Long userId, int from, int size) {
         LocalDateTime now = LocalDateTime.now();
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException(String.format("User id=%d not found", userId));
         }
         Sort sort = Sort.by("id").ascending();
-        List<ItemDto> userItems = itemMapper.toListItemDto(
-                itemRepository.findAllByOwnerId(userId, sort));
+        List<ItemDto> userItems =
+                itemMapper.toListItemDto(
+                        itemRepository.findAllByOwnerId(
+                                userId, PageRequest.of(from/size, size, Sort.by(Sort.Direction.ASC, "id"))));
         if (userItems.isEmpty()) {
             return Collections.emptyList();
         }
@@ -138,12 +141,16 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getSearcherItems(String text) {
+    public List<ItemDto> getSearcherItems(String text, int from, int size) {
         if (text.isEmpty()) {
             return new ArrayList<>();
         }
         List<ItemDto> items = itemMapper.toListItemDto(
-                itemRepository.findAllAvailableBySearch(text.toLowerCase(), text.toLowerCase(), TRUE));
+                itemRepository.findAllAvailableBySearch(
+                        text.toLowerCase(),
+                        text.toLowerCase(),
+                        TRUE,
+                        PageRequest.of(from/size, size)));
 
         List<Long> itemIds = items.stream()
                 .map(ItemDto::getId)

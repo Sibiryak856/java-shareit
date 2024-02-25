@@ -9,6 +9,7 @@ import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -25,9 +26,11 @@ public class ItemController {
     }
 
     @GetMapping
-    public List<ItemDto> getAllByUser(@RequestHeader("X-Sharer-User-Id") long userId) {
+    public List<ItemDto> getAllByUser(@RequestHeader("X-Sharer-User-Id") long userId,
+                                      @Min(0) @RequestParam(defaultValue = "0") int from,
+                                      @Min(1) @RequestParam(defaultValue = "10") int size) {
         log.info("Request received: GET /items for user id= {}", userId);
-        List<ItemDto> items = itemService.getAllByOwner(userId);
+        List<ItemDto> items = itemService.getAllByOwner(userId, from, size);
         log.info("Request GET /items processed: {}", items);
         return items;
     }
@@ -70,9 +73,11 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDto> search(@RequestParam String text) {
+    public List<ItemDto> search(@RequestParam String text,
+                                @Min(0) @RequestParam(defaultValue = "0") int from,
+                                @Min(1) @RequestParam(defaultValue = "10") int size) {
         log.debug("Request received: GET /items/search");
-        List<ItemDto> searchedItems = itemService.getSearcherItems(text);
+        List<ItemDto> searchedItems = itemService.getSearcherItems(text, from, size);
         log.debug("Request GET /items/search processed: searchedItems: {}", searchedItems);
         return searchedItems;
     }

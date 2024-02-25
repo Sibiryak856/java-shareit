@@ -11,6 +11,7 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -60,12 +61,14 @@ public class BookingController {
     @GetMapping
     public List<BookingDto> getAllByUserQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "ALL", required = false) String state
+            @RequestParam(defaultValue = "ALL", required = false) String state,
+            @Min(0) @RequestParam(defaultValue = "0") int from,
+            @Min(1) @RequestParam(defaultValue = "10") int size
     ) {
         log.debug("Request received: GET /bookings");
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
-        List<BookingDto> searchedBookings = bookingService.getAllByUserQuery(userId, bookingState);
+        List<BookingDto> searchedBookings = bookingService.getAllByUserQuery(userId, bookingState, from, size);
         log.debug("Request GET /bookings processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;
     }
@@ -73,12 +76,14 @@ public class BookingController {
     @GetMapping("/owner")
     public List<BookingDto> getAllByOwnerQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "ALL", required = false) String state
+            @RequestParam(defaultValue = "ALL", required = false) String state,
+            @Min(0) @RequestParam(defaultValue = "0") int from,
+            @Min(1) @RequestParam(defaultValue = "10") int size
     ) {
         log.debug("Request received: GET /bookings/owner");
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
-        List<BookingDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, bookingState);
+        List<BookingDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, bookingState, from, size);
         log.debug("Request GET /bookings/owner processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;
     }

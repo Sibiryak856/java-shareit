@@ -18,6 +18,8 @@ public class ItemDto {
 
     private BookingDto nextBooking;
 
+    private Long requestId;
+
     private List<CommentDto> comments;
 
     @Data
