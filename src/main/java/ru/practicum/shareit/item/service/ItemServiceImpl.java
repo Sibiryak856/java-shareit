@@ -57,43 +57,28 @@ public class ItemServiceImpl implements ItemService {
             return Collections.emptyList();
         }
 
-        List<Long> itemsId = userItems.stream()
+        List<Long> itemIds = userItems.stream()
                 .map(ItemDto::getId)
                 .collect(Collectors.toList());
 
         List<Booking> itemsBookings = bookingRepository
-                .findAllByItemIdInAndStatusNotLike(itemsId, BookingStatus.REJECTED);
-        Map<Long, List<Booking>> itemBookingsMap = new HashMap<>();
-        for (Booking booking : itemsBookings) {
-            Long id = booking.getItem().getId();
-            if (itemBookingsMap.get(id) == null) {
-                itemBookingsMap.put(id, new ArrayList<>());
-            }
-            List<Booking> bookings = itemBookingsMap.get(id);
-            bookings.add(booking);
-            itemBookingsMap.put(id, bookings);
-        }
+                .findAllByItemIdInAndStatusIs(itemIds, BookingStatus.APPROVED);
+        Map<Long, List<Booking>> itemBookingsMap = itemsBookings.stream()
+                .collect(Collectors.groupingBy(booking -> booking.getItem().getId()));
 
         List<Comment> itemsComments = commentRepository
-                .findAllByItemIdIn(itemsId, Sort.by("created").descending());
-        Map<Long, List<Comment>> itemsCommentsMap = new HashMap<>();
-        for (Comment comment : itemsComments) {
-            Long id = comment.getItem().getId();
-            if (itemsCommentsMap.get(id) == null) {
-                itemsCommentsMap.put(id, new ArrayList<>());
-            }
-            List<Comment> comments = itemsCommentsMap.get(id);
-            comments.add(comment);
-            itemsCommentsMap.put(id, comments);
-        }
+                .findAllByItemIdIn(itemIds, Sort.by("created").descending());
+        Map<Long, List<Comment>> itemsCommentsMap = itemsComments.stream()
+                .collect(Collectors.groupingBy(comment -> comment.getItem().getId()));
 
         for (ItemDto itemDto : userItems) {
             Long id = itemDto.getId();
             itemDto.setLastBooking(
-                    itemMapper.map(getLastBooking(itemBookingsMap.get(id), now)));
+                    itemMapper.map(getLastBooking(itemBookingsMap.getOrDefault(id, Collections.emptyList()), now)));
             itemDto.setNextBooking(
-                    itemMapper.map(getNextBooking(itemBookingsMap.get(id), now)));
-            itemDto.setComments(commentMapper.toListCommentDto(itemsCommentsMap.get(itemDto.getId())));
+                    itemMapper.map(getNextBooking(itemBookingsMap.getOrDefault(id, Collections.emptyList()), now)));
+            itemDto.setComments(commentMapper.toListCommentDto(
+                    itemsCommentsMap.getOrDefault(id, Collections.emptyList())));
         }
         return userItems;
     }
@@ -105,8 +90,8 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new NotFoundException(String.format("Item id=%d not found", itemId)));
         ItemDto itemDto = itemMapper.toItemDto(item);
         List<Booking> itemBookings = bookingRepository
-                .findAllByItemIdAndStatusNotLike(
-                        itemId, BookingStatus.REJECTED, Sort.by("startTime").ascending());
+                .findAllByItemIdAndStatusIs(
+                        itemId, BookingStatus.APPROVED, Sort.by("startTime").ascending());
         if (item.getOwner().getId().equals(userId)) {
             itemDto.setNextBooking(
                     itemMapper.map(getNextBooking(itemBookings, now)));
@@ -160,25 +145,18 @@ public class ItemServiceImpl implements ItemService {
         List<ItemDto> items = itemMapper.toListItemDto(
                 itemRepository.findAllAvailableBySearch(text.toLowerCase(), text.toLowerCase(), TRUE));
 
-        List<Long> itemsId = items.stream()
+        List<Long> itemIds = items.stream()
                 .map(ItemDto::getId)
                 .collect(Collectors.toList());
 
         List<Comment> itemsComments = commentRepository
-                .findAllByItemIdIn(itemsId, Sort.by("created").descending());
-        Map<Long, List<Comment>> itemsCommentsMap = new HashMap<>();
-        for (Comment comment : itemsComments) {
-            Long id = comment.getItem().getId();
-            if (itemsCommentsMap.get(id) == null) {
-                itemsCommentsMap.put(id, new ArrayList<>());
-            }
-            List<Comment> comments = itemsCommentsMap.get(id);
-            comments.add(comment);
-            itemsCommentsMap.put(id, comments);
-        }
+                .findAllByItemIdIn(itemIds, Sort.by("created").descending());
+        Map<Long, List<Comment>> itemsCommentsMap = itemsComments.stream()
+                .collect(Collectors.groupingBy(comment -> comment.getItem().getId()));
 
         for (ItemDto item : items) {
-            item.setComments(commentMapper.toListCommentDto(itemsCommentsMap.get(item.getId())));
+            item.setComments(commentMapper.toListCommentDto(
+                    itemsCommentsMap.getOrDefault(item.getId(), Collections.emptyList())));
         }
         return items;
     }
