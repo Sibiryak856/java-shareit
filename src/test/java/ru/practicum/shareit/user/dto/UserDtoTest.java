@@ -16,10 +16,11 @@ class UserDtoTest {
 
     @Test
     void testUserUDto() throws Exception {
-        UserDto userDto = new UserDto(
-                1L,
-                "name",
-                "name@email.ru");
+        UserDto userDto = UserDto.builder()
+                .id(1L)
+                .name("name")
+                .email("name@email.ru")
+                .build();
 
         JsonContent<UserDto> result = json.write(userDto);
 

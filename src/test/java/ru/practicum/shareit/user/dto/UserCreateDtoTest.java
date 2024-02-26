@@ -7,7 +7,6 @@ import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @JsonTest
 class UserCreateDtoTest {
@@ -16,10 +15,11 @@ class UserCreateDtoTest {
     private JacksonTester<UserCreateDto> json;
 
     @Test
-    void testUserUpdateDto() throws Exception {
-        UserCreateDto userCreateDtoDto = new UserCreateDto(
-                "name",
-                "name@email.ru");
+    void testUserCreateDto() throws Exception {
+        UserCreateDto userCreateDtoDto = UserCreateDto.builder()
+                .name("name")
+                .email("name@email.ru")
+                .build();
 
         JsonContent<UserCreateDto> result = json.write(userCreateDtoDto);
 
