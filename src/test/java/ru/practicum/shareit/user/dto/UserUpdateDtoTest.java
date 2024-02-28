@@ -25,7 +25,7 @@ class UserUpdateDtoTest {
         JsonContent<UserUpdateDto> result = json.write(userUpdateDto);
 
         assertThat(result).extractingJsonPathNumberValue("$.id").isEqualTo(1);
-        assertThat(result).extractingJsonPathStringValue("$.name").isEqualTo("name");
-        assertThat(result).extractingJsonPathStringValue("$.email").isEqualTo("name@email.ru");
+        assertThat(result).extractingJsonPathStringValue("$.name").isEqualTo("updateName");
+        assertThat(result).extractingJsonPathStringValue("$.email").isEqualTo("updateName@email.ru");
     }
 }

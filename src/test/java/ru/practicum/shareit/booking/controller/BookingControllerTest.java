@@ -11,8 +11,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @WebMvcTest(controllers = BookingController.class)
 class BookingControllerTest {
 
-    @Autowired
-
 
     @BeforeEach
     void setUp() {
