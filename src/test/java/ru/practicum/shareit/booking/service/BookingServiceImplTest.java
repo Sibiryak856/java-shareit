@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BookingServiceImplTest {
 
-    @Test
+    /*@Test
     void create() {
     }
 
@@ -24,5 +24,5 @@ class BookingServiceImplTest {
 
     @Test
     void getAllByOwnerQuery() {
-    }
+    }*/
 }

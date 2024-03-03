@@ -8,7 +8,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 class BookingControllerTest {
 
 
-    @BeforeEach
+    /*@BeforeEach
     void setUp() {
     }
 
@@ -30,5 +30,5 @@ class BookingControllerTest {
 
     @Test
     void getAllByOwnerQuery() {
-    }
+    }*/
 }

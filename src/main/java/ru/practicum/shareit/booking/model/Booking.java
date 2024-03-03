@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @EqualsAndHashCode
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "BOOKINGS", schema = "PUBLIC")

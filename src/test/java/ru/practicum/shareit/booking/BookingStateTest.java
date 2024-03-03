@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BookingStateTest {
 
-    @Test
+    /*@Test
     void from() {
-    }
+    }*/
 }

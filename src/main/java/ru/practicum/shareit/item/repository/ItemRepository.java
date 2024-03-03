@@ -24,7 +24,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
             @Param("available") Boolean available,
             Pageable pageable);
 
-    void deleteAllByOwnerId(@Param("userId") Long userId);
+    void deleteAllByOwnerId(Long userId);
 
     List<Item> findAllByRequestIdIn(List<Long> requestsId);
 }

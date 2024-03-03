@@ -11,7 +11,7 @@ import java.util.List;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
-    List<Comment> findAllByItemId(@Param("itemId") Long itemId, Sort sort);
+    List<Comment> findAllByItemId(Long itemId, Sort sort);
 
     List<Comment> findAllByItemIdIn(List<Long> itemsId, Sort created);
 }

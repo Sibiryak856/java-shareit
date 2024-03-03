@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class ItemRequestControllerTest {
 
-    @Test
+    /*@Test
     void create() {
     }
 
@@ -20,5 +20,5 @@ class ItemRequestControllerTest {
 
     @Test
     void findById() {
-    }
+    }*/
 }

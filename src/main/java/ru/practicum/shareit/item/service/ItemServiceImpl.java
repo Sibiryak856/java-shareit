@@ -56,9 +56,9 @@ public class ItemServiceImpl implements ItemService {
                 itemMapper.toListItemDto(
                         itemRepository.findAllByOwnerId(
                                 userId, PageRequest.of(from/size, size, Sort.by(Sort.Direction.ASC, "id"))));
-        if (userItems.isEmpty()) {
+        /*if (userItems.isEmpty()) {
             return Collections.emptyList();
-        }
+        }*/
 
         List<Long> itemIds = userItems.stream()
                 .map(ItemDto::getId)
@@ -129,7 +129,7 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public void delete(Long id, Long ownerId) {
-        if (userRepository.existsById(ownerId)) {
+        if (!userRepository.existsById(ownerId)) {
             throw new NotFoundException(String.format("User id=%d not found", ownerId));
         }
         Item deletingItem = itemRepository.findById(id)
@@ -143,7 +143,7 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public List<ItemDto> getSearcherItems(String text, int from, int size) {
         if (text.isEmpty()) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
         List<ItemDto> items = itemMapper.toListItemDto(
                 itemRepository.findAllAvailableBySearch(
