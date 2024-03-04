@@ -147,6 +147,7 @@ class ItemServiceImplTest {
 
     @Test
     void getItem_whenItemFound_thenReturnItemDto() {
+        itemDto.setComments(null);
         when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
         when(commentRepository.findAllByItemId(anyLong(), any(Sort.class)))
@@ -393,15 +394,11 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void commentCreate_whenCommentIsValid_thenReturnCommentDto() {
-        LocalDateTime created = LocalDateTime.now();
+    void createComment_whenCommentIsValid_thenReturnCommentDto() {
         User author = User.builder()
                 .id(5L)
                 .name("author")
                 .email("author@email.com")
-                .build();
-        CommentCreateDto commentCreateDto = CommentCreateDto.builder()
-                .text("text")
                 .build();
         CommentDto commentDto = CommentDto.builder()
                 .id(1L)
@@ -411,6 +408,8 @@ class ItemServiceImplTest {
         Comment comment = Comment.builder()
                 .id(1L)
                 .text("text")
+                .item(item)
+                .author(author)
                 .build();
         when(userRepository.findById(author.getId()))
                 .thenReturn(Optional.of(author));
@@ -430,13 +429,98 @@ class ItemServiceImplTest {
                         .booker(author)
                         .status(BookingStatus.APPROVED)
                         .build()));
-        when(commentRepository.save(comment))
+        when(commentRepository.save(any(Comment.class)))
                 .thenReturn(comment);
 
-        CommentDto savedCommentDto = itemService.create(commentCreateDto, author.getId(), item.getId());
+        CommentDto savedCommentDto = itemService.create(
+                CommentCreateDto.builder()
+                        .text("text")
+                        .build(),
+                author.getId(),
+                item.getId());
 
         assertThat(savedCommentDto.getId()).isEqualTo(commentDto.getId());
         assertThat(savedCommentDto.getText()).isEqualTo(commentDto.getText());
         assertThat(savedCommentDto.getAuthorName()).isEqualTo(commentDto.getAuthorName());
+
+        verify(commentRepository).save(any(Comment.class));
+    }
+
+    @Test
+    void createComment_whenAuthorNotFound_thenNotFoundExceptionThrown() {
+        Long authorId = 1L;
+        Long itemId = 1L;
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.empty());
+
+        NotFoundException e = assertThrows(NotFoundException.class,
+                () -> itemService.create(
+                        CommentCreateDto.builder()
+                                .text("text")
+                                .build(),
+                        authorId,
+                        itemId));
+
+        assertThat(e.getMessage()).isEqualTo(String.format("User id=%d not found", authorId));
+
+        verify(commentRepository, never()).save(any(Comment.class));
+    }
+
+    @Test
+    void createComment_whenItemNotFound_thenNotFoundExceptionThrown() {
+        User author = User.builder()
+                .id(5L)
+                .name("author")
+                .email("author@email.com")
+                .build();
+        Long itemId = 10L;
+        when(userRepository.findById(author.getId()))
+                .thenReturn(Optional.of(author));
+        when(itemRepository.findById(itemId))
+                .thenReturn(Optional.empty());
+
+        NotFoundException e = assertThrows(NotFoundException.class,
+                () -> itemService.create(
+                        CommentCreateDto.builder()
+                                .text("text")
+                                .build(),
+                author.getId(),
+                itemId));
+
+        assertThat(e.getMessage()).isEqualTo(String.format("Item id=%d not found", itemId));
+
+        verify(commentRepository, never()).save(any(Comment.class));
+    }
+
+    @Test
+    void createComment_whenBookingNotFound_thenIllegalArgumentExceptionThrown() {
+        User author = User.builder()
+                .id(5L)
+                .name("author")
+                .email("author@email.com")
+                .build();
+        when(userRepository.findById(author.getId()))
+                .thenReturn(Optional.of(author));
+        when(itemRepository.findById(item.getId()))
+                .thenReturn(Optional.of(item));
+        when(bookingRepository.findAllByBookerIdAndItemIdAndStatusIsAndEndTimeBefore(
+                anyLong(),
+                anyLong(),
+                any(BookingStatus.class),
+                any(LocalDateTime.class)))
+                .thenReturn(Collections.emptyList());
+
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> itemService.create(
+                        CommentCreateDto.builder()
+                                .text("text")
+                                .build(),
+                        author.getId(),
+                        item.getId()));
+
+        assertThat(e.getMessage())
+                .isEqualTo(String.format("User id=%d didn't book this item id=%d", author.getId(), item.getId()));
+
+        verify(commentRepository, never()).save(any(Comment.class));
     }
 }

@@ -12,11 +12,12 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
-import ru.practicum.shareit.item.dto.ItemCreateDto;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemUpdateDto;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.mapper.ItemMapper;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
@@ -24,6 +25,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -48,6 +50,12 @@ class ItemControllerTest {
 
     @MockBean
     private UserRepository userRepository;
+
+    @MockBean
+    private ItemRepository itemRepository;
+
+    @MockBean
+    private BookingRepository bookingRepository;
 
     @Autowired
     private MockMvc mvc;
@@ -298,7 +306,54 @@ class ItemControllerTest {
         verify(itemService).getSearcherItems(String.valueOf(""), from, size);
     }
 
-    /*@Test
-    void testCreate() {
+    /*@SneakyThrows
+    @Test
+    void createComment_whenCommentIsValid_thenReturnCommentDto() {
+        CommentCreateDto commentCreateDto = CommentCreateDto.builder()
+                .text("text")
+                .build();
+        CommentDto commentDto = CommentDto.builder()
+                .id(1L)
+                .text("text")
+                .authorName("name")
+                .created(LocalDateTime.now())
+                .build();
+        when(userRepository.findById(anyLong()))
+                .thenReturn(Optional.of(User.builder()
+                        .id(1L)
+                        .name("name")
+                        .email("name@email.com")
+                        .build()));
+        when(itemRepository.findById(anyLong()))
+                .thenReturn(Optional.of(Item.builder()
+                        .id(1L)
+                        .name("name")
+                        .description("description")
+                        .owner(User.builder()
+                                .id(2L)
+                                .build())
+                        .build()));
+        when(bookingRepository.findAllByBookerIdAndItemIdAndStatusIsAndEndTimeBefore(
+                anyLong(),
+                anyLong(),
+                any(BookingStatus.class),
+                any(LocalDateTime.class)))
+                .thenReturn(List.of(new Booking()));
+
+        when(itemService.create(commentCreateDto, 1L, 1L))
+                .thenReturn(commentDto);
+
+        mvc.perform(post("/items/{itemId}/comment", 1L)
+                        .header("X-Sharer-User-Id", 1)
+                        .content(String.valueOf(mapper.writeValueAsString(commentCreateDto)))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(commentDto.getId()), Long.class))
+                .andExpect(jsonPath("$.text", is(commentDto.getText())))
+                .andExpect(jsonPath("$.authorName", is(commentDto.getAuthorName())));
+
+        verify(itemService).create(commentCreateDto, 1L, 1L);
     }*/
 }
