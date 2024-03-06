@@ -78,7 +78,7 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public List<ItemRequestDto> findAll(long userId, int from, int size) {
         List<ItemRequestDto> itemRequests = requestMapper.toRequestDtosList(
                 requestRepository.findAllByRequestorIdNot(
-                        userId, PageRequest.of(from/size, size, Sort.by(Sort.Direction.DESC, "created"))));
+                        userId, PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "created"))));
 
         List<Long> requestIds = itemRequests.stream()
                 .map(ItemRequestDto::getId)
