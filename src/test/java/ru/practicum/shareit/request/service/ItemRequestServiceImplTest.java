@@ -192,4 +192,32 @@ class ItemRequestServiceImplTest {
 
         assertThat(itemRequestDto).isEqualTo(requestDto);
     }
+
+    @Test
+    void findById_whenUserNotFound_thenNotFoundExceptionThrown() {
+        Long userId = 10L;
+        Long requestId = 1L;
+        when(userRepository.existsById(userId))
+                .thenReturn(FALSE);
+
+        NotFoundException e = assertThrows(NotFoundException.class,
+                () -> requestService.findById(userId, requestId));
+
+        assertThat(e.getMessage()).isEqualTo(String.format("User id=%d not found", userId));
+    }
+
+    @Test
+    void findById_whenRequestNotFound_thenNotFoundExceptionThrown() {
+        Long userId = 1L;
+        Long requestId = 10L;
+        when(userRepository.existsById(userId))
+                .thenReturn(TRUE);
+        when(requestRepository.findById(requestId))
+                .thenReturn(Optional.empty());
+
+        NotFoundException e = assertThrows(NotFoundException.class,
+                () -> requestService.findById(userId, requestId));
+
+        assertThat(e.getMessage()).isEqualTo(String.format("ItemRequest id=%d not found", requestId));
+    }
 }

@@ -174,7 +174,7 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getItem_whenItemFound_thenReturnItemDtoWithLAstBookingAndComments() {
+    void getItem_whenItemFound_thenReturnItemDtoWithLastBookingAndComments() {
         Booking lastBooking = Booking.builder()
                 .id(1L)
                 .startTime(LocalDateTime.now().minusMinutes(1))
@@ -294,7 +294,7 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void update_whenItemotFound_thenNotFoundExceptionThrown() {
+    void update_whenItemNotFound_thenNotFoundExceptionThrown() {
         when(userRepository.findById(owner.getId()))
                 .thenReturn(Optional.of(owner));
         when(itemRepository.findById(anyLong()))
