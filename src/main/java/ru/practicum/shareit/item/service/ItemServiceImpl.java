@@ -180,7 +180,7 @@ public class ItemServiceImpl implements ItemService {
         if (userBookings.isEmpty()) {
             throw new IllegalArgumentException(String.format("User id=%d didn't book this item id=%d", userId, itemId));
         }
-        Comment comment = commentMapper.toComment(commentDto, item, user, LocalDateTime.now());
+        Comment comment = commentMapper.toComment(commentDto, item, user, LocalDateTime.now().withNano(0));
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
