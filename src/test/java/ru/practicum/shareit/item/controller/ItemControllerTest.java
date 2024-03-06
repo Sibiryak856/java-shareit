@@ -5,7 +5,6 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -16,9 +15,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.repository.BookingRepository;
 import ru.practicum.shareit.item.dto.*;
-import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.repository.CommentRepository;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 import ru.practicum.shareit.user.model.User;
@@ -290,7 +287,7 @@ class ItemControllerTest {
         int from = 5;
         int size = 10;
         items.add(itemDto);
-        when(itemService.getSearcherItems(String.valueOf(""), from, size))
+        when(itemService.getSearcherItems("", from, size))
                 .thenReturn(items);
 
         String itemsDTO = mvc.perform(get("/items/search")
@@ -303,7 +300,7 @@ class ItemControllerTest {
                 .getContentAsString();
 
         assertThat(mapper.writeValueAsString(items)).isEqualTo(itemsDTO);
-        verify(itemService).getSearcherItems(String.valueOf(""), from, size);
+        verify(itemService).getSearcherItems("", from, size);
     }
 
     @SneakyThrows
