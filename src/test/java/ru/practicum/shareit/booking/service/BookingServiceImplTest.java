@@ -475,7 +475,7 @@ class BookingServiceImplTest {
         verify(bookingRepository, never()).findAllByBookerIdAndStatus(
                 anyLong(), any(BookingStatus.class), any(Pageable.class));
     }
-///////////////////////////////
+
 @Test
 void getAllByOwnerQuery_whenStateIsAll_thenReturnAllBookings() {
     Long userId = 2L;
