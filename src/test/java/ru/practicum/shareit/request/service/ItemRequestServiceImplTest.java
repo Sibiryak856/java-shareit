@@ -100,7 +100,7 @@ class ItemRequestServiceImplTest {
         when(requestRepository.save(any(ItemRequest.class)))
                 .thenReturn(request);
 
-        ItemRequestDto savedRequest = requestService.create(requestCreateDto,requestor.getId());
+        ItemRequestDto savedRequest = requestService.create(requestCreateDto, requestor.getId());
 
         assertThat(savedRequest.getId()).isEqualTo(requestDto.getId());
         assertThat(savedRequest.getDescription()).isEqualTo(requestDto.getDescription());
