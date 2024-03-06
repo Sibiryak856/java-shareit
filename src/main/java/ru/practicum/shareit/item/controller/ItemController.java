@@ -85,7 +85,7 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public CommentDto create(@RequestHeader("X-Sharer-User-Id") long userId,
                              @PathVariable Long itemId,
-                             @Validated @RequestBody CommentCreateDto commentDto) {
+                             @Valid @RequestBody CommentCreateDto commentDto) {
         log.debug("Request received: POST /items/{itemId}/comment: {}", commentDto);
         CommentDto createdComment = itemService.create(commentDto, userId, itemId);
         log.info("Request POST /items/{itemId}/comment processed: comment={} is created", createdComment);

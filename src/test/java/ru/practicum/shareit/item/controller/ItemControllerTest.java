@@ -306,7 +306,7 @@ class ItemControllerTest {
         verify(itemService).getSearcherItems(String.valueOf(""), from, size);
     }
 
-    /*@SneakyThrows
+    @SneakyThrows
     @Test
     void createComment_whenCommentIsValid_thenReturnCommentDto() {
         CommentCreateDto commentCreateDto = CommentCreateDto.builder()
@@ -355,5 +355,5 @@ class ItemControllerTest {
                 .andExpect(jsonPath("$.authorName", is(commentDto.getAuthorName())));
 
         verify(itemService).create(commentCreateDto, 1L, 1L);
-    }*/
+    }
 }
