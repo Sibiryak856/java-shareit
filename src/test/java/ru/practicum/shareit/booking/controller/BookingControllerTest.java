@@ -181,6 +181,7 @@ class BookingControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
+
     @SneakyThrows
     @Test
     void update_whenStatusAlreadyChanged_thenStatusIsBadRequest() {
@@ -213,6 +214,7 @@ class BookingControllerTest {
 
         verify(bookingService).getBooking(anyLong(), anyLong());
     }
+
     @SneakyThrows
     @Test
     void getById_whenUserNotFound_thenStatusIsNotFound() {

@@ -97,7 +97,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException(String.format("User id=%d not found", userId));
         }
         List<Booking> requestedBooking;
-        Pageable pageable = PageRequest.of(from/size, size, Sort.by(Sort.Direction.DESC, "startTime"));
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"));
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case ALL:
@@ -135,7 +135,7 @@ public class BookingServiceImpl implements BookingService {
             throw new NotFoundException(String.format("User id=%d not found", userId));
         }
         List<Booking> requestedBooking;
-        Pageable pageable = PageRequest.of(from/size, size, Sort.by(Sort.Direction.DESC, "startTime"));
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"));
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case ALL:

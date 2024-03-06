@@ -55,10 +55,7 @@ public class ItemServiceImpl implements ItemService {
         List<ItemDto> userItems =
                 itemMapper.toListItemDto(
                         itemRepository.findAllByOwnerId(
-                                userId, PageRequest.of(from/size, size, Sort.by(Sort.Direction.ASC, "id"))));
-        /*if (userItems.isEmpty()) {
-            return Collections.emptyList();
-        }*/
+                                userId, PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id"))));
 
         List<Long> itemIds = userItems.stream()
                 .map(ItemDto::getId)
@@ -150,7 +147,7 @@ public class ItemServiceImpl implements ItemService {
                         text.toLowerCase(),
                         text.toLowerCase(),
                         TRUE,
-                        PageRequest.of(from/size, size)));
+                        PageRequest.of(from / size, size)));
 
         List<Long> itemIds = items.stream()
                 .map(ItemDto::getId)
