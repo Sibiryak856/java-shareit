@@ -29,7 +29,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findAllByItemOwnerIdAndStartTimeBeforeAndEndTimeAfter(
             long userId, LocalDateTime start, LocalDateTime end, Pageable pageable);
 
-    List<Booking> findFAllByItemOwnerIdAndStartTimeAfter(long userId, LocalDateTime now, Pageable pageable);
+    List<Booking> findAllByItemOwnerIdAndStartTimeAfter(long userId, LocalDateTime now, Pageable pageable);
 
     List<Booking> findAllByItemOwnerIdAndEndTimeBefore(long userId, LocalDateTime now, Pageable pageable);
 

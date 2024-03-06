@@ -28,11 +28,13 @@ public class BookingDto {
     ItemDto item;
 
     @Data
+    @Builder
     public static class UserDto {
         Long id;
     }
 
     @Data
+    @Builder
     public static class ItemDto {
         Long id;
 

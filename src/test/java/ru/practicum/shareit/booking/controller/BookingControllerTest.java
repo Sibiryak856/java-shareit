@@ -352,7 +352,7 @@ class BookingControllerTest {
         when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
                 .thenReturn(List.of(bookingDto));
 
-        mvc.perform(get("/bookings", userId)
+        mvc.perform(get("/bookings/owner", userId)
                         .header("X-Sharer-User-Id", 1)
                         .param("state", "ALL")
                         .param("from", "5")
@@ -366,12 +366,12 @@ class BookingControllerTest {
     @SneakyThrows
     @Test
     void getAllByOwnerQuery_whenUserNotFound_thenStatusIsNotFound() {
-        Long userId = 1L;
-        when(bookingService.getAllByUserQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
+        Long userId = 10L;
+        when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
                 .thenThrow(NotFoundException.class);
 
-        mvc.perform(get("/bookings", userId)
-                        .header("X-Sharer-User-Id", 1)
+        mvc.perform(get("/bookings/owner", userId)
+                        .header("X-Sharer-User-Id", 10)
                         .param("state", "ALL")
                         .param("from", "5")
                         .param("size", "10")
@@ -388,7 +388,7 @@ class BookingControllerTest {
         when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
                 .thenThrow(IllegalArgumentException.class);
 
-        mvc.perform(get("/bookings", userId)
+        mvc.perform(get("/bookings/owner", userId)
                         .header("X-Sharer-User-Id", 1)
                         .param("state", "smth")
                         .param("from", "5")

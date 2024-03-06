@@ -147,7 +147,7 @@ public class BookingServiceImpl implements BookingService {
                 break;
             case FUTURE:
                 requestedBooking = bookingRepository
-                        .findFAllByItemOwnerIdAndStartTimeAfter(userId, now, pageable);
+                        .findAllByItemOwnerIdAndStartTimeAfter(userId, now, pageable);
                 break;
             case PAST:
                 requestedBooking = bookingRepository
