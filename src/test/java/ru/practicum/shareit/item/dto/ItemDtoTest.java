@@ -7,6 +7,7 @@ import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import static java.lang.Boolean.TRUE;
@@ -20,7 +21,8 @@ class ItemDtoTest {
 
     @Test
     void testItemDto() throws Exception {
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
         ItemDto itemDto = ItemDto.builder()
                 .id(1L)
                 .name("item")
@@ -53,7 +55,7 @@ class ItemDtoTest {
         assertThat(result).extractingJsonPathStringValue("$.comments[0].text")
                 .isEqualTo(itemDto.getComments().get(0).getText());
         assertThat(result).extractingJsonPathStringValue("$.comments[0].created")
-                .isEqualTo(itemDto.getComments().get(0).getCreated().toString());
+                .isEqualTo(formatter.format(itemDto.getComments().get(0).getCreated()));
 
     }
 }
