@@ -20,7 +20,9 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.lang.Boolean.TRUE;
@@ -167,17 +169,18 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDto create(CommentCreateDto commentDto, long userId, Long itemId) {
+        LocalDateTime created = LocalDateTime.now();
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(String.format("User id=%d not found", userId)));
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item id=%d not found", itemId)));
         List<Booking> userBookings = bookingRepository
                 .findAllByBookerIdAndItemIdAndStatusIsAndEndTimeBefore(
-                        userId, itemId, BookingStatus.APPROVED, LocalDateTime.now());
+                        userId, itemId, BookingStatus.APPROVED, created);
         if (userBookings.isEmpty()) {
             throw new IllegalArgumentException(String.format("User id=%d didn't book this item id=%d", userId, itemId));
         }
-        Comment comment = commentMapper.toComment(commentDto, item, user, LocalDateTime.now().withNano(0));
+        Comment comment = commentMapper.toComment(commentDto, item, user, created);
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
