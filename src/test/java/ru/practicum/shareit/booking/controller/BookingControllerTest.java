@@ -130,6 +130,21 @@ class BookingControllerTest {
 
     @SneakyThrows
     @Test
+    void create_whenUserNotFound_thenStatusIsNotFound() {
+        when(bookingService.create(any(BookingCreateDto.class), anyLong()))
+                .thenThrow(NotFoundException.class);
+
+        mvc.perform(post("/bookings")
+                        .header("X-Sharer-User-Id", 1)
+                        .content(String.valueOf(mapper.writeValueAsString(bookingCreateDto)))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @SneakyThrows
+    @Test
     void update_whenRequestIsValid_thenStatusIsOkAndReturnUpdatedBookingDto() {
         bookingDto.setStatus(BookingStatus.APPROVED);
         Long userId = 1L;

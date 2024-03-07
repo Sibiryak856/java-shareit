@@ -24,6 +24,7 @@ import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -64,12 +65,14 @@ class ItemRequestServiceImplTest {
 
     @BeforeEach
     void setUp() {
+        LocalDateTime created = LocalDateTime.now().withNano(0);
         requestCreateDto = ItemRequestCreateDto.builder()
                 .description("description")
                 .build();
         requestDto = ItemRequestDto.builder()
                 .id(1L)
                 .description("description")
+                .created(created)
                 .items(null)
                 .build();
         requestor = User.builder()
@@ -81,6 +84,7 @@ class ItemRequestServiceImplTest {
                 .id(1L)
                 .description("description")
                 .requestor(requestor)
+                .created(created)
                 .build();
     }
 
@@ -102,11 +106,7 @@ class ItemRequestServiceImplTest {
 
         ItemRequestDto savedRequest = requestService.create(requestCreateDto, requestor.getId());
 
-        assertThat(savedRequest.getId()).isEqualTo(requestDto.getId());
-        assertThat(savedRequest.getDescription()).isEqualTo(requestDto.getDescription());
-        assertThat(savedRequest.getItems()).isEqualTo(requestDto.getItems());
-
-        verify(requestRepository).save(any(ItemRequest.class));
+        assertThat(savedRequest).isEqualTo(requestDto);
     }
 
     @Test
@@ -196,13 +196,15 @@ class ItemRequestServiceImplTest {
     void findById_whenUserNotFound_thenNotFoundExceptionThrown() {
         Long userId = 10L;
         Long requestId = 1L;
-        when(userRepository.existsById(userId))
+        when(userRepository.existsById(anyLong()))
                 .thenReturn(FALSE);
 
         NotFoundException e = assertThrows(NotFoundException.class,
                 () -> requestService.findById(userId, requestId));
 
         assertThat(e.getMessage()).isEqualTo(String.format("User id=%d not found", userId));
+
+        verify(requestRepository, never()).findById(requestId);
     }
 
     @Test

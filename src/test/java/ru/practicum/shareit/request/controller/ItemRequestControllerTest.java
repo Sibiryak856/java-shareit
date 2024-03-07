@@ -10,24 +10,20 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.request.dto.ItemRequestCreateDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
-import ru.practicum.shareit.request.model.ItemRequest;
-import ru.practicum.shareit.request.repository.ItemRequestRepository;
 import ru.practicum.shareit.request.service.ItemRequestServiceImpl;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.List;
 
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = ItemRequestController.class)
@@ -39,37 +35,19 @@ class ItemRequestControllerTest {
     @MockBean
     private ItemRequestServiceImpl requestService;
 
-    @MockBean
-    private ItemRequestRepository requestRepository;
-
-    @MockBean
-    private UserRepository userRepository;
-
     @Autowired
     private MockMvc mvc;
 
     private ItemRequestDto requestDto;
     private ItemRequestCreateDto requestCreateDto;
-    private ItemRequest request;
-    private User user;
 
     @BeforeEach
     void setUp() {
-        user = User.builder()
-                .id(1L)
-                .name("name")
-                .email("name@email.com")
-                .build();
+        LocalDateTime created = LocalDateTime.now();
         requestDto = ItemRequestDto.builder()
                 .id(1L)
                 .description("description")
-                .created(LocalDateTime.now())
-                .build();
-        request = ItemRequest.builder()
-                .id(1L)
-                .description("description")
-                .requestor(user)
-                .created(requestDto.getCreated())
+                .created(created)
                 .build();
         requestCreateDto = new ItemRequestCreateDto("description");
     }
@@ -84,21 +62,21 @@ class ItemRequestControllerTest {
     @SneakyThrows
     @Test
     void create_whenRequestIsValid_thenStatusIsCreatedAndReturnSavedRequest() {
-        Long userId = 1L;
-        when(requestService.create(requestCreateDto, userId))
+        when(requestService.create(any(ItemRequestCreateDto.class), anyLong()))
                 .thenReturn(requestDto);
 
-        mvc.perform(post("/requests")
+        String result = mvc.perform(post("/requests")
                         .header("X-Sharer-User-Id", 1)
                         .content(String.valueOf(mapper.writeValueAsString(requestCreateDto)))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(requestDto.getId()), Long.class))
-                .andExpect(jsonPath("$.description", is(requestDto.getDescription())));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(requestService).create(requestCreateDto, userId);
+        assertThat(result).isEqualTo(mapper.writeValueAsString(requestDto));
     }
 
     @SneakyThrows
@@ -119,21 +97,35 @@ class ItemRequestControllerTest {
 
     @SneakyThrows
     @Test
-    void findAll() {
-        Long requestorId = 1L;
-        int from = 5;
-        int size = 10;
+    void create_whenUserNotFound_thenStatusIsNotFound() {
+        when(requestService.create(any(ItemRequestCreateDto.class), anyLong()))
+                .thenThrow(NotFoundException.class);
 
-        when(requestService.findAll(requestorId, from, size))
-                .thenReturn(new ArrayList<>());
+        mvc.perform(post("/requests")
+                        .header("X-Sharer-User-Id", 1)
+                        .content(String.valueOf(mapper.writeValueAsString(requestCreateDto)))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
 
-        mvc.perform(get("/requests/all")
-                .header("X-Sharer-User-Id", 1)
-                .param("from", "5")
-                .param("size", "10"))
-                .andExpect(status().isOk());
+    @SneakyThrows
+    @Test
+    void findAll_whenArgsIsValid_thenStatusIsOkAndReturnListOfRequestDto() {
+        when(requestService.findAll(anyLong(), anyInt(), anyInt()))
+                .thenReturn(List.of(requestDto));
 
-        verify(requestService).findAll(requestorId, from, size);
+        String result = mvc.perform(get("/requests/all")
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "5")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(result).isEqualTo(mapper.writeValueAsString(List.of(requestDto)));
     }
 
     @SneakyThrows
@@ -160,32 +152,55 @@ class ItemRequestControllerTest {
 
     @SneakyThrows
     @Test
-    void findAllByUser() {
-        Long requestorId = 1L;
+    void findAllByUser_whenArgsIsValid_thenStatusIsOkAndReturnListOfRequestDto() {
+        when(requestService.findAllByUser(anyLong()))
+                .thenReturn(List.of(requestDto));
 
-        when(requestService.findAllByUser(requestorId))
-                .thenReturn(new ArrayList<>());
-
-        mvc.perform(get("/requests")
+        String result = mvc.perform(get("/requests")
                         .header("X-Sharer-User-Id", 1))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(requestService).findAllByUser(requestorId);
+        assertThat(result).isEqualTo(mapper.writeValueAsString(List.of(requestDto)));
     }
 
     @SneakyThrows
     @Test
-    void findById() {
-        Long requestorId = 1L;
-        when(requestService.findById(requestDto.getId(), requestorId))
+    void findAllByUser_whenUserNotFound_thenStatusIsNotFound() {
+        when(requestService.findAllByUser(anyLong()))
+                .thenThrow(NotFoundException.class);
+
+        mvc.perform(get("/requests")
+                        .header("X-Sharer-User-Id", 1))
+                .andExpect(status().isNotFound());
+    }
+
+    @SneakyThrows
+    @Test
+    void findById_whenArgsISValid_thenStatusIsOkAndReturnRequestDto() {
+        when(requestService.findById(anyLong(), anyLong()))
                 .thenReturn(requestDto);
+
+        String result = mvc.perform(get("/requests/{requestId}", requestDto.getId())
+                        .header("X-Sharer-User-Id", 1))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(result).isEqualTo(mapper.writeValueAsString(requestDto));
+    }
+
+    @SneakyThrows
+    @Test
+    void findById_whenUserOrItemNotFound_thenStatusIsNotFound() {
+        when(requestService.findById(anyLong(), anyLong()))
+                .thenThrow(NotFoundException.class);
 
         mvc.perform(get("/requests/{requestId}", requestDto.getId())
                         .header("X-Sharer-User-Id", 1))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(requestDto.getId()), Long.class))
-                .andExpect(jsonPath("$.description", is(requestDto.getDescription())));
-
-        verify(requestService).findById(requestDto.getId(), requestorId);
+                .andExpect(status().isNotFound());
     }
 }
