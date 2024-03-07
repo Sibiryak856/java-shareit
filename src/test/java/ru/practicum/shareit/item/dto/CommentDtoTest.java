@@ -8,6 +8,7 @@ import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,7 +21,8 @@ class CommentDtoTest {
     @SneakyThrows
     @Test
     void testCommentDto() {
-        LocalDateTime now = LocalDateTime.now().withNano(0);
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS");
         CommentDto commentDto = CommentDto.builder()
                 .id(1L)
                 .text("text")
@@ -33,6 +35,7 @@ class CommentDtoTest {
         assertThat(result).extractingJsonPathNumberValue("$.id").isEqualTo(1);
         assertThat(result).extractingJsonPathStringValue("$.text").isEqualTo("text");
         assertThat(result).extractingJsonPathStringValue("$.authorName").isEqualTo("name");
-        assertThat(result).extractingJsonPathStringValue("$.created").isEqualTo(now.toString());
+        assertThat(result).extractingJsonPathStringValue("$.created")
+                .isEqualTo(formatter.format(now));
     }
 }
