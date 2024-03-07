@@ -11,22 +11,17 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.booking.repository.BookingRepository;
+import ru.practicum.shareit.exception.NotAccessException;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.*;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.item.service.ItemServiceImpl;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static java.lang.Boolean.TRUE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -44,15 +39,6 @@ class ItemControllerTest {
 
     @MockBean
     private ItemServiceImpl itemService;
-
-    @MockBean
-    private UserRepository userRepository;
-
-    @MockBean
-    private ItemRepository itemRepository;
-
-    @MockBean
-    private BookingRepository bookingRepository;
 
     @Autowired
     private MockMvc mvc;
@@ -108,102 +94,110 @@ class ItemControllerTest {
     @SneakyThrows
     @Test
     void getAllByUser_whenUsersExist_thenStatusOkAndReturnList() {
-        Long ownerId = 1L;
-        int from = 5;
-        int size = 10;
+        when(itemService.getAllByOwner(anyLong(), anyInt(), anyInt()))
+                .thenReturn(List.of(itemDto));
 
-        when(itemService.getAllByOwner(ownerId, from, size))
-                .thenReturn(new ArrayList<>());
-
-        mvc.perform(get("/items")
+        String result = mvc.perform(get("/items")
                         .header("X-Sharer-User-Id", 1)
                         .param("from", "5")
                         .param("size", "10"))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(itemService).getAllByOwner(ownerId, from, size);
+        assertThat(result).isEqualTo(mapper.writeValueAsString(List.of(itemDto)));
     }
 
     @SneakyThrows
     @Test
     void getAllByUser_whenRequestParamFromFalse_thenBadRequest() {
-        Long ownerId = 1L;
-        int from = -1;
-        int size = 10;
-        when(itemService.getAllByOwner(ownerId, from, size))
-                .thenReturn(new ArrayList<>());
-
-        mvc.perform(get("/items"))
+        mvc.perform(get("/items")
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "-1")
+                        .param("size", "10"))
                 .andExpect(status().isBadRequest());
 
-        verify(itemService, never()).getAllByOwner(ownerId, from, size);
+        verify(itemService, never()).getAllByOwner(anyLong(), anyInt(), anyInt());
     }
 
     @SneakyThrows
     @Test
     void getAllByUser_whenRequestSizeFromFalse_thenBadRequest() {
-        Long ownerId = 1L;
-        int from = 10;
-        int size = 0;
-        when(itemService.getAllByOwner(ownerId, from, size))
-                .thenReturn(new ArrayList<>());
-
-        mvc.perform(get("/items"))
+        mvc.perform(get("/items")
+                        .header("X-Sharer-User-Id", 1)
+                        .param("from", "5")
+                        .param("size", "0"))
                 .andExpect(status().isBadRequest());
 
-        verify(itemService, never()).getAllByOwner(ownerId, from, size);
+        verify(itemService, never()).getAllByOwner(anyLong(), anyInt(), anyInt());
     }
 
     @SneakyThrows
     @Test
-    void getItem() {
-        Long id = itemDto.getId();
+    void getAllByUser_whenUserNotFound_thenStatusIsNotFound() {
+        when(itemService.getAllByOwner(anyLong(), anyInt(), anyInt()))
+                .thenThrow(NotFoundException.class);
 
-        when(itemService.getItem(itemDto.getId(), 1L))
+        mvc.perform(get("/items")
+                        .header("X-Sharer-User-Id", 10L)
+                        .param("from", "5")
+                        .param("size", "10"))
+                .andExpect(status().isNotFound());
+    }
+
+    @SneakyThrows
+    @Test
+    void getItem_whenArgsIsValid_thenStatusIsOkAndReturnItemDto() {
+        when(itemService.getItem(anyLong(), anyLong()))
                 .thenReturn(itemDto);
+
+        String result = mvc.perform(get("/items/{itemId}", itemDto.getId())
+                        .header("X-Sharer-User-Id", 1))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        assertThat(result).isEqualTo(mapper.writeValueAsString(itemDto));
+    }
+
+    @SneakyThrows
+    @Test
+    void getItem_whenItemNotFound_thenStatusIsNotFound() {
+        when(itemService.getItem(anyLong(), anyLong()))
+                .thenThrow(NotFoundException.class);
 
         mvc.perform(get("/items/{itemId}", itemDto.getId())
                         .header("X-Sharer-User-Id", 1)
                         .param("from", "5")
                         .param("size", "10"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(itemDto.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(itemDto.getName())))
-                .andExpect(jsonPath("$.description", is(itemDto.getDescription())))
-                .andExpect(jsonPath("$.available", is(itemDto.getAvailable())));
-
-        verify(itemService).getItem(itemDto.getId(), 1L);
+                .andExpect(status().isNotFound());
     }
 
     @SneakyThrows
     @Test
     void create_whenItemIsValid_thenStatusIsCreatedAndReturnSavedItem() {
-        Long ownerId = 1L;
-        when(userRepository.findById(ownerId))
-                .thenReturn(Optional.of(new User()));
-
-        when(itemService.create(itemCreateDto, ownerId))
+        when(itemService.create(any(ItemCreateDto.class), anyLong()))
                 .thenReturn(itemDto);
 
-        mvc.perform(post("/items")
+        String result = mvc.perform(post("/items")
                         .header("X-Sharer-User-Id", 1)
                         .content(String.valueOf(mapper.writeValueAsString(itemCreateDto)))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(itemDto.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(itemDto.getName())))
-                .andExpect(jsonPath("$.description", is(itemDto.getDescription())))
-                .andExpect(jsonPath("$.available", is(itemDto.getAvailable())));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(itemService).create(itemCreateDto, ownerId);
+        assertThat(result).isEqualTo(mapper.writeValueAsString(itemDto));
     }
 
     @SneakyThrows
     @Test
     void create_whenItemIsNotValid_thenStatusIsBadRequest() {
-        Long ownerId = 1L;
         itemCreateDto.setName("");
 
         mvc.perform(post("/items")
@@ -214,45 +208,36 @@ class ItemControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(itemService, never()).create(itemCreateDto, ownerId);
+        verify(itemService, never()).create(any(ItemCreateDto.class), anyLong());
     }
 
     @SneakyThrows
     @Test
     void update_whenItemIsValid_thenStatusIsOkAndReturnUpdatedItem() {
-        Long ownerId = 1L;
-        when(userRepository.findById(ownerId))
-                .thenReturn(Optional.of(new User()));
-
-        when(itemService.update(itemDto.getId(), ownerId, itemUpdateDto))
+        when(itemService.update(anyLong(), anyLong(), any(ItemUpdateDto.class)))
                 .thenReturn(updatedItemDto);
 
-        mvc.perform(patch("/items/{itemId}", itemDto.getId())
+        String result = mvc.perform(patch("/items/{itemId}", itemDto.getId())
                         .header("X-Sharer-User-Id", 1)
                         .content(String.valueOf(mapper.writeValueAsString(itemUpdateDto)))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(updatedItemDto.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(updatedItemDto.getName())))
-                .andExpect(jsonPath("$.description", is(updatedItemDto.getDescription())))
-                .andExpect(jsonPath("$.available", is(updatedItemDto.getAvailable())));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(itemService).update(1L, 1L, itemUpdateDto);
+        assertThat(result).isEqualTo(mapper.writeValueAsString(updatedItemDto));
     }
 
     @SneakyThrows
     @Test
     void update_whenFieldsEmpty_thenStatusIsOkAndReturnUpdatedItem() {
-        Long ownerId = 1L;
         itemUpdateDto.setName(null);
         itemUpdateDto.setDescription(null);
-        when(userRepository.findById(ownerId))
-                .thenReturn(Optional.of(new User()));
-
-        when(itemService.update(itemDto.getId(), ownerId, itemUpdateDto))
-                .thenReturn(updatedItemDto);
+        when(itemService.update(anyLong(), anyLong(), any(ItemUpdateDto.class)))
+                .thenReturn(itemDto);
 
         mvc.perform(patch("/items/{itemId}", itemDto.getId())
                         .header("X-Sharer-User-Id", 1)
@@ -261,20 +246,51 @@ class ItemControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(updatedItemDto.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(updatedItemDto.getName())))
-                .andExpect(jsonPath("$.description", is(updatedItemDto.getDescription())))
-                .andExpect(jsonPath("$.available", is(updatedItemDto.getAvailable())));
+                .andExpect(jsonPath("$.id", is(itemDto.getId()), Long.class))
+                .andExpect(jsonPath("$.name", is(itemDto.getName())))
+                .andExpect(jsonPath("$.description", is(itemDto.getDescription())))
+                .andExpect(jsonPath("$.available", is(itemDto.getAvailable())));
 
-        verify(itemService).update(1L, 1L, itemUpdateDto);
+        verify(itemService).update(anyLong(), anyLong(), any(ItemUpdateDto.class));
     }
+
+    @SneakyThrows
+    @Test
+    void update_whenUserOrItemNotFound_thenStatusIsNotFound() {
+        when(itemService.update(anyLong(), anyLong(), any(ItemUpdateDto.class)))
+                .thenThrow(NotFoundException.class);
+
+        mvc.perform(patch("/items/{itemId}", itemDto.getId())
+                        .header("X-Sharer-User-Id", 1)
+                        .content(String.valueOf(mapper.writeValueAsString(itemUpdateDto)))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @SneakyThrows
+    @Test
+    void update_whenUserIsNotOwner_thenStatusIsNotFound() {
+        when(itemService.update(anyLong(), anyLong(), any(ItemUpdateDto.class)))
+                .thenThrow(NotAccessException.class);
+
+        mvc.perform(patch("/items/{itemId}", itemDto.getId())
+                        .header("X-Sharer-User-Id", 1)
+                        .content(String.valueOf(mapper.writeValueAsString(itemUpdateDto)))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
 
     @SneakyThrows
     @Test
     void delete() {
         Long ownerId = 1L;
         mvc.perform(MockMvcRequestBuilders.delete("/items/{itemId}", itemDto.getId())
-                .header("X-Sharer-User-Id", 1))
+                        .header("X-Sharer-User-Id", 1))
                 .andExpect(status().isNoContent());
 
         verify(itemService).delete(itemDto.getId(), ownerId);
@@ -282,16 +298,13 @@ class ItemControllerTest {
 
     @SneakyThrows
     @Test
-    void search() {
-        Long ownerId = 1L;
-        int from = 5;
-        int size = 10;
+    void search_whenArgsIsValid_thenStatusIsOkAndReturnListOfItemDto() {
         items.add(itemDto);
-        when(itemService.getSearcherItems("", from, size))
+        when(itemService.getSearcherItems(anyString(), anyInt(), anyInt()))
                 .thenReturn(items);
 
-        String itemsDTO = mvc.perform(get("/items/search")
-                        .param("text", "")
+        String result = mvc.perform(get("/items/search")
+                        .param("text", "text")
                         .param("from", "5")
                         .param("size", "10"))
                 .andExpect(status().isOk())
@@ -299,58 +312,71 @@ class ItemControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        assertThat(mapper.writeValueAsString(items)).isEqualTo(itemsDTO);
-        verify(itemService).getSearcherItems("", from, size);
+        assertThat(result).isEqualTo(mapper.writeValueAsString(items));
     }
 
     @SneakyThrows
     @Test
-    void createComment_whenCommentIsValid_thenReturnCommentDto() {
-        CommentCreateDto commentCreateDto = CommentCreateDto.builder()
-                .text("text")
-                .build();
+    void createComment_whenCommentIsValid_thenStatusIsOkAndReturnCommentDto() {
         CommentDto commentDto = CommentDto.builder()
                 .id(1L)
                 .text("text")
                 .authorName("name")
                 .created(LocalDateTime.now())
                 .build();
-        when(userRepository.findById(anyLong()))
-                .thenReturn(Optional.of(User.builder()
-                        .id(1L)
-                        .name("name")
-                        .email("name@email.com")
-                        .build()));
-        when(itemRepository.findById(anyLong()))
-                .thenReturn(Optional.of(Item.builder()
-                        .id(1L)
-                        .name("name")
-                        .description("description")
-                        .owner(User.builder()
-                                .id(2L)
-                                .build())
-                        .build()));
-        when(bookingRepository.findAllByBookerIdAndItemIdAndStatusIsAndEndTimeBefore(
-                anyLong(),
-                anyLong(),
-                any(BookingStatus.class),
-                any(LocalDateTime.class)))
-                .thenReturn(List.of(new Booking()));
-
-        when(itemService.create(commentCreateDto, 1L, 1L))
+        when(itemService.create(any(CommentCreateDto.class), anyLong(), anyLong()))
                 .thenReturn(commentDto);
 
-        mvc.perform(post("/items/{itemId}/comment", 1L)
+        String result = mvc.perform(post("/items/{itemId}/comment", 1L)
                         .header("X-Sharer-User-Id", 1)
-                        .content(String.valueOf(mapper.writeValueAsString(commentCreateDto)))
+                        .content(String.valueOf(mapper.writeValueAsString(
+                                CommentCreateDto.builder()
+                                        .text("text")
+                                        .build())))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(commentDto.getId()), Long.class))
-                .andExpect(jsonPath("$.text", is(commentDto.getText())))
-                .andExpect(jsonPath("$.authorName", is(commentDto.getAuthorName())));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(itemService).create(commentCreateDto, 1L, 1L);
+        assertThat(result).isEqualTo(mapper.writeValueAsString(commentDto));
+    }
+
+    @SneakyThrows
+    @Test
+    void createComment_whenUserOrItemNotFound_thenStatusIsNotFound() {
+        when(itemService.create(any(CommentCreateDto.class), anyLong(), anyLong()))
+                .thenThrow(NotFoundException.class);
+
+        mvc.perform(post("/items/{itemId}/comment", 1L)
+                        .header("X-Sharer-User-Id", 1)
+                        .content(String.valueOf(mapper.writeValueAsString(
+                                CommentCreateDto.builder()
+                                        .text("text")
+                                        .build())))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @SneakyThrows
+    @Test
+    void createComment_whenUserHasNotBookings_thenStatusIsBadRequest() {
+        when(itemService.create(any(CommentCreateDto.class), anyLong(), anyLong()))
+                .thenThrow(IllegalArgumentException.class);
+
+        mvc.perform(post("/items/{itemId}/comment", 1L)
+                        .header("X-Sharer-User-Id", 1)
+                        .content(String.valueOf(mapper.writeValueAsString(
+                                CommentCreateDto.builder()
+                                        .text("text")
+                                        .build())))
+                        .characterEncoding(StandardCharsets.UTF_8)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 }

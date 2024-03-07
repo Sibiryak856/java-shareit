@@ -118,13 +118,15 @@ class ItemServiceImplTest {
 
     @Test
     void getAllByOwner_whenOwnerFound_thenReturnItems() {
+        int from = 5;
+        int size = 10;
         items.add(item);
         List<ItemDto> itemDtoList = List.of(itemDto);
         when(userRepository.existsById(anyLong())).thenReturn(TRUE);
         when(itemRepository.findAllByOwnerId(anyLong(), any(Pageable.class)))
                 .thenReturn(items);
 
-        List<ItemDto> actualItemDtoList = itemService.getAllByOwner(owner.getId(), 10, 20);
+        List<ItemDto> actualItemDtoList = itemService.getAllByOwner(owner.getId(), from, size);
 
         assertThat(actualItemDtoList).isNotNull();
         assertThat(actualItemDtoList).isEqualTo(itemDtoList);
@@ -135,10 +137,12 @@ class ItemServiceImplTest {
     @Test
     void getAllByOwner_whenOwnerNotFound_thenNotFoundExceptionThrown() {
         Long userId = 100L;
+        int from = 5;
+        int size = 10;
         when(userRepository.existsById(anyLong())).thenReturn(FALSE);
 
         NotFoundException e = assertThrows(NotFoundException.class,
-                () -> itemService.getAllByOwner(userId, 10, 20));
+                () -> itemService.getAllByOwner(userId, from, size));
 
         assertThat(e.getMessage()).isEqualTo(String.format("User id=%d not found", userId));
 
@@ -245,9 +249,9 @@ class ItemServiceImplTest {
         itemDto.setComments(null);
         itemDto.setName(itemUpdateDto.getName());
         itemDto.setName(itemUpdateDto.getName());
-        when(userRepository.findById(owner.getId()))
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
-        when(itemRepository.findById(itemUpdateDto.getId()))
+        when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
         when(itemRepository.save(any(Item.class)))
                 .thenReturn(item);
@@ -257,16 +261,18 @@ class ItemServiceImplTest {
 
         assertThat(updatedItemDto).isEqualTo(itemDto);
 
-        verify(itemRepository).save(item);
+        verify(itemRepository).save(any(Item.class));
     }
 
     @Test
     void update_whenUserNotFound_thenNotFoundExceptionThrown() {
-        when(userRepository.findById(10L))
+        Long itemId = 1L;
+        Long userId = 10L;
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
         NotFoundException e = assertThrows(NotFoundException.class,
-                () -> itemService.update(1L, 10L, itemUpdateDto));
+                () -> itemService.update(itemId, userId, itemUpdateDto));
 
         assertThat(e.getMessage()).isEqualTo("Owner not found");
 
@@ -280,9 +286,9 @@ class ItemServiceImplTest {
                 .name("name3")
                 .email("name3@email.com")
                 .build();
-        when(userRepository.findById(notOwner.getId()))
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(notOwner));
-        when(itemRepository.findById(item.getId()))
+        when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
 
         NotAccessException e = assertThrows(NotAccessException.class,
@@ -295,13 +301,14 @@ class ItemServiceImplTest {
 
     @Test
     void update_whenItemNotFound_thenNotFoundExceptionThrown() {
-        when(userRepository.findById(owner.getId()))
+        Long itemId = 10L;
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(owner));
         when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
         NotFoundException e = assertThrows(NotFoundException.class,
-                () -> itemService.update(anyLong(), owner.getId(), itemUpdateDto));
+                () -> itemService.update(itemId, owner.getId(), itemUpdateDto));
 
         assertThat(e.getMessage()).isEqualTo("Updating item not found");
 
@@ -310,21 +317,21 @@ class ItemServiceImplTest {
 
     @Test
     void delete_whenUserIsOwnerAndFound_thenSuccess() {
-        willDoNothing().given(itemRepository).deleteById(item.getId());
-        when(userRepository.existsById(owner.getId()))
+        willDoNothing().given(itemRepository).deleteById(anyLong());
+        when(userRepository.existsById(anyLong()))
                 .thenReturn(TRUE);
-        when(itemRepository.findById(item.getId()))
+        when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
 
         itemService.delete(item.getId(), owner.getId());
 
-        verify(itemRepository, times(1)).deleteById(item.getId());
+        verify(itemRepository, times(1)).deleteById(anyLong());
     }
 
     @Test
     void delete_whenUserNotFound_thenNotFoundExceptionThrown() {
         Long userId = 10L;
-        when(userRepository.existsById(userId))
+        when(userRepository.existsById(anyLong()))
                 .thenReturn(FALSE);
 
         NotFoundException e = assertThrows(NotFoundException.class,
@@ -332,7 +339,7 @@ class ItemServiceImplTest {
 
         assertThat(e.getMessage()).isEqualTo(String.format("User id=%d not found", userId));
 
-        verify(itemRepository, never()).deleteById(item.getId());
+        verify(itemRepository, never()).deleteById(anyLong());
     }
 
     @Test
@@ -342,9 +349,9 @@ class ItemServiceImplTest {
                 .name("name3")
                 .email("name3@email.com")
                 .build();
-        when(userRepository.existsById(notOwner.getId()))
+        when(userRepository.existsById(anyLong()))
                 .thenReturn(TRUE);
-        when(itemRepository.findById(item.getId()))
+        when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
 
         NotAccessException e = assertThrows(NotAccessException.class,
@@ -352,25 +359,29 @@ class ItemServiceImplTest {
 
         assertThat(e.getMessage()).isEqualTo("Only item's owner can delete data");
 
-        verify(itemRepository, never()).deleteById(item.getId());
+        verify(itemRepository, never()).deleteById(anyLong());
     }
 
     @Test
     void delete_whenItemNotFound_thenNotFoundExceptionThrown() {
-        when(userRepository.existsById(owner.getId()))
+        Long itemId = 10L;
+        when(userRepository.existsById(anyLong()))
                 .thenReturn(TRUE);
 
         NotFoundException e = assertThrows(NotFoundException.class,
-                () -> itemService.delete(10L, owner.getId()));
+                () -> itemService.delete(itemId, owner.getId()));
 
         assertThat(e.getMessage()).isEqualTo("Deleting item not found");
 
-        verify(itemRepository, never()).deleteById(item.getId());
+        verify(itemRepository, never()).deleteById(anyLong());
     }
 
     @Test
     void getSearcherItems_whenTextIsEmpty_thenReturnEmptyList() {
-        List<ItemDto> itemDtoList = itemService.getSearcherItems("", 10, 20);
+        String text = "";
+        int from = 5;
+        int size = 10;
+        List<ItemDto> itemDtoList = itemService.getSearcherItems(text, from, size);
 
         assertThat(itemDtoList).isNotNull();
         assertThat(itemDtoList.size()).isEqualTo(0);
@@ -378,6 +389,9 @@ class ItemServiceImplTest {
 
     @Test
     void getSearcherItems_whenRequestIsValid_thenReturnItemsList() {
+        String text = "name";
+        int from = 5;
+        int size = 10;
         items.add(item);
         itemDto.setComments(Collections.emptyList());
         when(itemRepository.findAllAvailableBySearch(anyString(), anyString(), any(Boolean.class), any(Pageable.class)))
@@ -385,7 +399,7 @@ class ItemServiceImplTest {
         when(commentRepository.findAllByItemIdIn(anyList(), any(Sort.class)))
                 .thenReturn(Collections.emptyList());
 
-        List<ItemDto> itemDtoList = itemService.getSearcherItems("name", 10, 20);
+        List<ItemDto> itemDtoList = itemService.getSearcherItems(text, from, size);
 
         assertThat(itemDtoList).isNotNull();
         assertThat(itemDtoList).isEqualTo(List.of(itemDto));
@@ -411,9 +425,9 @@ class ItemServiceImplTest {
                 .item(item)
                 .author(author)
                 .build();
-        when(userRepository.findById(author.getId()))
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(author));
-        when(itemRepository.findById(item.getId()))
+        when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
         when(bookingRepository
                 .findAllByBookerIdAndItemIdAndStatusIsAndEndTimeBefore(
@@ -439,9 +453,7 @@ class ItemServiceImplTest {
                 author.getId(),
                 item.getId());
 
-        assertThat(savedCommentDto.getId()).isEqualTo(commentDto.getId());
-        assertThat(savedCommentDto.getText()).isEqualTo(commentDto.getText());
-        assertThat(savedCommentDto.getAuthorName()).isEqualTo(commentDto.getAuthorName());
+        assertThat(savedCommentDto).isEqualTo(commentDto);
 
         verify(commentRepository).save(any(Comment.class));
     }
@@ -474,9 +486,9 @@ class ItemServiceImplTest {
                 .email("author@email.com")
                 .build();
         Long itemId = 10L;
-        when(userRepository.findById(author.getId()))
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(author));
-        when(itemRepository.findById(itemId))
+        when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
         NotFoundException e = assertThrows(NotFoundException.class,
@@ -499,9 +511,9 @@ class ItemServiceImplTest {
                 .name("author")
                 .email("author@email.com")
                 .build();
-        when(userRepository.findById(author.getId()))
+        when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.of(author));
-        when(itemRepository.findById(item.getId()))
+        when(itemRepository.findById(anyLong()))
                 .thenReturn(Optional.of(item));
         when(bookingRepository.findAllByBookerIdAndItemIdAndStatusIsAndEndTimeBefore(
                 anyLong(),

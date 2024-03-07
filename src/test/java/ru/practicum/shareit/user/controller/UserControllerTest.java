@@ -11,6 +11,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dto.UserCreateDto;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserUpdateDto;
@@ -20,11 +21,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = UserController.class)
@@ -84,32 +83,44 @@ class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void getAll() {
+    void getAll_whenArgsIsValid_thenStatusIsOkAndReturnUsersList() {
         users.add(userDto);
 
         when(userService.getAll())
                 .thenReturn(users);
 
-        mvc.perform(get("/users"))
+        String result = mvc.perform(get("/users"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.*", hasSize(users.size())));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(userService).getAll();
+        assertThat(result).isEqualTo(mapper.writeValueAsString(users));
     }
 
     @SneakyThrows
     @Test
-    void getUser() {
-        when(userService.getUser(userDto.getId()))
+    void getUser_whenUserIsFound_thenStatusIsOkAndReturnUserDto() {
+        when(userService.getUser(anyLong()))
                 .thenReturn(userDto);
 
-        mvc.perform(get("/users/{id}", userDto.getId()))
+        String result = mvc.perform(get("/users/{id}", userDto.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(userDto.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(userDto.getName())))
-                .andExpect(jsonPath("$.email", is(userDto.getEmail())));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(userService).getUser(userDto.getId());
+        assertThat(result).isEqualTo(mapper.writeValueAsString(userDto));
+    }
+
+    @SneakyThrows
+    @Test
+    void getUser_whenUserNotFound_thenStatusIsNotFound() {
+        when(userService.getUser(anyLong()))
+                .thenThrow(NotFoundException.class);
+
+        mvc.perform(get("/users/{id}", userDto.getId()))
+                .andExpect(status().isNotFound());
     }
 
     @SneakyThrows
@@ -118,17 +129,17 @@ class UserControllerTest {
         when(userService.create(any(UserCreateDto.class)))
                 .thenReturn(userDto);
 
-        mvc.perform(post("/users")
+        String result = mvc.perform(post("/users")
                         .content(String.valueOf(mapper.writeValueAsString(userCreateDto)))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id", is(userDto.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(userDto.getName())))
-                .andExpect(jsonPath("$.email", is(userDto.getEmail())));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(userService).create(userCreateDto);
+        assertThat(result).isEqualTo(mapper.writeValueAsString(userDto));
     }
 
     @SneakyThrows
@@ -176,20 +187,20 @@ class UserControllerTest {
     @SneakyThrows
     @Test
     void update_whenUserIsValid_thenStatusIsOkAndReturnUpdatedUser() {
-        when(userService.update(userDto.getId(), userDtoToUpdate))
+        when(userService.update(anyLong(), any(UserUpdateDto.class)))
                 .thenReturn(userUpdatedDto);
 
-        mvc.perform(patch("/users/{id}", userDto.getId())
+        String result = mvc.perform(patch("/users/{id}", userDto.getId())
                         .content(String.valueOf(mapper.writeValueAsString(userDtoToUpdate)))
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(userUpdatedDto.getId()), Long.class))
-                .andExpect(jsonPath("$.name", is(userUpdatedDto.getName())))
-                .andExpect(jsonPath("$.email", is(userUpdatedDto.getEmail())));
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
 
-        verify(userService).update(userDto.getId(), userDtoToUpdate);
+        assertThat(result).isEqualTo(mapper.writeValueAsString(userUpdatedDto));
     }
 
     @SneakyThrows
@@ -209,7 +220,7 @@ class UserControllerTest {
 
     @SneakyThrows
     @Test
-    void delete() {
+    void delete_whenArgsIsValid_thenStatusIsNoContent() {
         mvc.perform(MockMvcRequestBuilders.delete("/users/{id}", userDto.getId()))
                 .andExpect(status().isNoContent());
 
