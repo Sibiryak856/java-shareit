@@ -65,13 +65,13 @@ public class BookingController {
     public List<BookingDto> getAllByUserQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(defaultValue = "ALL", required = false) String state,
-            @Min(0) @RequestParam(defaultValue = "0") int from,
-            @Min(1) @RequestParam(defaultValue = "10") int size
+            @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
+            @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit
     ) {
         log.debug("Request received: GET /bookings");
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"));
+        Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.DESC, "startTime"));
         List<BookingDto> searchedBookings = bookingService.getAllByUserQuery(userId, bookingState, pageable);
         log.debug("Request GET /bookings processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;
@@ -81,13 +81,13 @@ public class BookingController {
     public List<BookingDto> getAllByOwnerQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
             @RequestParam(defaultValue = "ALL", required = false) String state,
-            @Min(0) @RequestParam(defaultValue = "0") int from,
-            @Min(1) @RequestParam(defaultValue = "10") int size
+            @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
+            @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit
     ) {
         log.debug("Request received: GET /bookings/owner");
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"));
+        Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.DESC, "startTime"));
         List<BookingDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, bookingState, pageable);
         log.debug("Request GET /bookings/owner processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;

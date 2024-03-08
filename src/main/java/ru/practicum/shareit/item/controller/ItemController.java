@@ -30,10 +30,10 @@ public class ItemController {
 
     @GetMapping
     public List<ItemDto> getAllByUser(@RequestHeader("X-Sharer-User-Id") long userId,
-                                      @Min(0) @RequestParam(defaultValue = "0") int from,
-                                      @Min(1) @RequestParam(defaultValue = "10") int size) {
+                                      @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
+                                      @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit) {
         log.info("Request received: GET /items for user id= {}", userId);
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id"));
+        Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.ASC, "id"));
         List<ItemDto> items = itemService.getAllByOwner(userId, pageable);
         log.info("Request GET /items processed: {}", items);
         return items;
@@ -78,10 +78,10 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDto> search(@RequestParam String text,
-                                @Min(0) @RequestParam(defaultValue = "0") int from,
-                                @Min(1) @RequestParam(defaultValue = "10") int size) {
+                                @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
+                                @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit) {
         log.debug("Request received: GET /items/search");
-        Pageable pageable = PageRequest.of(from / size, size);
+        Pageable pageable = PageRequest.of(offset / limit, limit);
         List<ItemDto> searchedItems = itemService.getSearcherItems(text, pageable);
         log.debug("Request GET /items/search processed: searchedItems: {}", searchedItems);
         return searchedItems;
