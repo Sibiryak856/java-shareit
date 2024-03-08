@@ -2,6 +2,9 @@ package ru.practicum.shareit.request.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +16,6 @@ import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import java.util.List;
 
-/**
- * TODO Sprint add-item-requests.
- */
 @RestController
 @Slf4j
 @Validated
@@ -44,7 +44,8 @@ public class ItemRequestController {
                                         @Min(0) @RequestParam(defaultValue = "0") int from,
                                         @Min(1) @RequestParam(defaultValue = "10") int size) {
         log.info("Request received: GET /requests/all");
-        List<ItemRequestDto> requests = requestService.findAll(userId, from, size);
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "created"));
+        List<ItemRequestDto> requests = requestService.findAll(userId, pageable);
         log.info("Request GET /requests/all processed: {}", requests);
         return requests;
     }

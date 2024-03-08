@@ -9,6 +9,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.model.Booking;
@@ -126,7 +127,9 @@ class ItemServiceImplTest {
         when(itemRepository.findAllByOwnerId(anyLong(), any(Pageable.class)))
                 .thenReturn(items);
 
-        List<ItemDto> actualItemDtoList = itemService.getAllByOwner(owner.getId(), from, size);
+        List<ItemDto> actualItemDtoList = itemService.getAllByOwner(
+                owner.getId(),
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id")));
 
         assertThat(actualItemDtoList).isNotNull();
         assertThat(actualItemDtoList).isEqualTo(itemDtoList);
@@ -142,7 +145,9 @@ class ItemServiceImplTest {
         when(userRepository.existsById(anyLong())).thenReturn(FALSE);
 
         NotFoundException e = assertThrows(NotFoundException.class,
-                () -> itemService.getAllByOwner(userId, from, size));
+                () -> itemService.getAllByOwner(
+                        userId,
+                        PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id"))));
 
         assertThat(e.getMessage()).isEqualTo(String.format("User id=%d not found", userId));
 
@@ -381,7 +386,9 @@ class ItemServiceImplTest {
         String text = "";
         int from = 5;
         int size = 10;
-        List<ItemDto> itemDtoList = itemService.getSearcherItems(text, from, size);
+        List<ItemDto> itemDtoList = itemService.getSearcherItems(
+                text,
+                PageRequest.of(from / size, size));
 
         assertThat(itemDtoList).isNotNull();
         assertThat(itemDtoList.size()).isEqualTo(0);
@@ -394,17 +401,21 @@ class ItemServiceImplTest {
         int size = 10;
         items.add(item);
         itemDto.setComments(Collections.emptyList());
-        when(itemRepository.findAllAvailableBySearch(anyString(), anyString(), any(Boolean.class), any(Pageable.class)))
+        when(itemRepository.findAllAvailableBySearch(
+                anyString(), anyString(), any(Boolean.class), any(Pageable.class)))
                 .thenReturn(items);
         when(commentRepository.findAllByItemIdIn(anyList(), any(Sort.class)))
                 .thenReturn(Collections.emptyList());
 
-        List<ItemDto> itemDtoList = itemService.getSearcherItems(text, from, size);
+        List<ItemDto> itemDtoList = itemService.getSearcherItems(
+                text,
+                PageRequest.of(from / size, size));
 
         assertThat(itemDtoList).isNotNull();
         assertThat(itemDtoList).isEqualTo(List.of(itemDto));
 
-        verify(itemRepository).findAllAvailableBySearch(anyString(), anyString(), any(Boolean.class), any(Pageable.class));
+        verify(itemRepository)
+                .findAllAvailableBySearch(anyString(), anyString(), any(Boolean.class), any(Pageable.class));
     }
 
     @Test
@@ -460,8 +471,8 @@ class ItemServiceImplTest {
 
     @Test
     void createComment_whenAuthorNotFound_thenNotFoundExceptionThrown() {
-        Long authorId = 1L;
-        Long itemId = 1L;
+        long authorId = 1L;
+        long itemId = 1L;
         when(userRepository.findById(anyLong()))
                 .thenReturn(Optional.empty());
 
@@ -496,8 +507,8 @@ class ItemServiceImplTest {
                         CommentCreateDto.builder()
                                 .text("text")
                                 .build(),
-                author.getId(),
-                itemId));
+                        author.getId(),
+                        itemId));
 
         assertThat(e.getMessage()).isEqualTo(String.format("Item id=%d not found", itemId));
 

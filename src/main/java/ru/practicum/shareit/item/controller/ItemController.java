@@ -2,6 +2,9 @@ package ru.practicum.shareit.item.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +33,8 @@ public class ItemController {
                                       @Min(0) @RequestParam(defaultValue = "0") int from,
                                       @Min(1) @RequestParam(defaultValue = "10") int size) {
         log.info("Request received: GET /items for user id= {}", userId);
-        List<ItemDto> items = itemService.getAllByOwner(userId, from, size);
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id"));
+        List<ItemDto> items = itemService.getAllByOwner(userId, pageable);
         log.info("Request GET /items processed: {}", items);
         return items;
     }
@@ -77,7 +81,8 @@ public class ItemController {
                                 @Min(0) @RequestParam(defaultValue = "0") int from,
                                 @Min(1) @RequestParam(defaultValue = "10") int size) {
         log.debug("Request received: GET /items/search");
-        List<ItemDto> searchedItems = itemService.getSearcherItems(text, from, size);
+        Pageable pageable = PageRequest.of(from / size, size);
+        List<ItemDto> searchedItems = itemService.getSearcherItems(text, pageable);
         log.debug("Request GET /items/search processed: searchedItems: {}", searchedItems);
         return searchedItems;
     }

@@ -2,6 +2,9 @@ package ru.practicum.shareit.booking.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -68,7 +71,8 @@ public class BookingController {
         log.debug("Request received: GET /bookings");
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
-        List<BookingDto> searchedBookings = bookingService.getAllByUserQuery(userId, bookingState, from, size);
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"));
+        List<BookingDto> searchedBookings = bookingService.getAllByUserQuery(userId, bookingState, pageable);
         log.debug("Request GET /bookings processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;
     }
@@ -83,7 +87,8 @@ public class BookingController {
         log.debug("Request received: GET /bookings/owner");
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
-        List<BookingDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, bookingState, from, size);
+        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"));
+        List<BookingDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, bookingState, pageable);
         log.debug("Request GET /bookings/owner processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;
     }

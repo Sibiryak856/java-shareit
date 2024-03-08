@@ -1,13 +1,12 @@
 package ru.practicum.shareit.request.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.repository.ItemRepository;
 import ru.practicum.shareit.request.dto.ItemRequestCreateDto;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
@@ -18,7 +17,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -54,46 +52,36 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException(String.format("User id=%d not found", userId));
         }
-        List<ItemRequestDto> itemRequests = requestMapper.toRequestDtosList(requestRepository
-                .findAllByRequestorId(userId, Sort.by("created").descending()));
-
+        List<ItemRequest> itemRequests = requestRepository
+                .findAllByRequestorId(userId, Sort.by("created").descending());
 
         List<Long> requestIds = itemRequests.stream()
-                .map(ItemRequestDto::getId)
+                .map(ItemRequest::getId)
                 .collect(Collectors.toList());
 
-        List<Item> itemsWithRequest = itemRepository.findAllByRequestIdIn(requestIds);
+        List<ItemDto> itemsWithRequest = itemMapper.toListItemDto(itemRepository.findAllByRequestIdIn(requestIds));
 
-        Map<Long, List<Item>> requestItemsMap = itemsWithRequest.stream()
-                .collect(Collectors.groupingBy(Item::getRequestId));
+        Map<Long, List<ItemDto>> requestItemsMap = itemsWithRequest.stream()
+                .collect(Collectors.groupingBy(ItemDto::getRequestId));
 
-        itemRequests.forEach(itemRequestDto ->
-                itemRequestDto.setItems(itemMapper.toListItemDto(
-                        requestItemsMap.getOrDefault(itemRequestDto.getId(), Collections.emptyList()))));
-
-        return itemRequests;
+        return requestMapper.toRequestDtosList(itemRequests, requestItemsMap);
     }
 
     @Override
-    public List<ItemRequestDto> findAll(long userId, int from, int size) {
-        List<ItemRequestDto> itemRequests = requestMapper.toRequestDtosList(
-                requestRepository.findAllByRequestorIdNot(
-                        userId, PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "created"))));
+    public List<ItemRequestDto> findAll(long userId, Pageable pageable) {
+        List<ItemRequest> itemRequests = requestRepository.findAllByRequestorIdNot(
+                        userId, pageable);
 
         List<Long> requestIds = itemRequests.stream()
-                .map(ItemRequestDto::getId)
+                .map(ItemRequest::getId)
                 .collect(Collectors.toList());
 
-        List<Item> itemsWithRequest = itemRepository.findAllByRequestIdIn(requestIds);
+        List<ItemDto> itemDtoWithRequest = itemMapper.toListItemDto(itemRepository.findAllByRequestIdIn(requestIds));
 
-        Map<Long, List<Item>> requestItemsMap = itemsWithRequest.stream()
-                .collect(Collectors.groupingBy(Item::getRequestId));
+        Map<Long, List<ItemDto>> requestItemsMap = itemDtoWithRequest.stream()
+                .collect(Collectors.groupingBy(ItemDto::getRequestId));
 
-        itemRequests.forEach(itemRequestDto ->
-                itemRequestDto.setItems(itemMapper.toListItemDto(
-                        requestItemsMap.getOrDefault(itemRequestDto.getId(), Collections.emptyList()))));
-
-        return itemRequests;
+        return requestMapper.toRequestDtosList(itemRequests, requestItemsMap);
     }
 
     @Override

@@ -1,9 +1,7 @@
 package ru.practicum.shareit.booking.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
@@ -92,12 +90,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getAllByUserQuery(long userId, BookingState state, int from, int size) {
+    public List<BookingDto> getAllByUserQuery(long userId, BookingState state, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException(String.format("User id=%d not found", userId));
         }
         List<Booking> requestedBooking;
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"));
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case ALL:
@@ -130,12 +127,11 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getAllByOwnerQuery(long userId, BookingState state, int from, int size) {
+    public List<BookingDto> getAllByOwnerQuery(long userId, BookingState state, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException(String.format("User id=%d not found", userId));
         }
         List<Booking> requestedBooking;
-        Pageable pageable = PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"));
         LocalDateTime now = LocalDateTime.now();
         switch (state) {
             case ALL:

@@ -1,13 +1,13 @@
 package ru.practicum.shareit.request.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -58,10 +58,8 @@ class ItemRequestControllerTest {
         requestCreateDto = null;
     }
 
-
-    @SneakyThrows
     @Test
-    void create_whenRequestIsValid_thenStatusIsCreatedAndReturnSavedRequest() {
+    void create_whenRequestIsValid_thenStatusIsCreatedAndReturnSavedRequest() throws Exception {
         when(requestService.create(any(ItemRequestCreateDto.class), anyLong()))
                 .thenReturn(requestDto);
 
@@ -79,9 +77,8 @@ class ItemRequestControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(requestDto));
     }
 
-    @SneakyThrows
     @Test
-    void create_whenRequestIsNotValid_thenStatusIsBadRequest() {
+    void create_whenRequestIsNotValid_thenStatusIsBadRequest() throws Exception {
         requestCreateDto.setDescription("");
 
         mvc.perform(post("/requests")
@@ -95,9 +92,8 @@ class ItemRequestControllerTest {
         verify(requestService, never()).create(any(ItemRequestCreateDto.class), anyLong());
     }
 
-    @SneakyThrows
     @Test
-    void create_whenUserNotFound_thenStatusIsNotFound() {
+    void create_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         when(requestService.create(any(ItemRequestCreateDto.class), anyLong()))
                 .thenThrow(NotFoundException.class);
 
@@ -110,10 +106,9 @@ class ItemRequestControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void findAll_whenArgsIsValid_thenStatusIsOkAndReturnListOfRequestDto() {
-        when(requestService.findAll(anyLong(), anyInt(), anyInt()))
+    void findAll_whenArgsIsValid_thenStatusIsOkAndReturnListOfRequestDto() throws Exception {
+        when(requestService.findAll(anyLong(), any(Pageable.class)))
                 .thenReturn(List.of(requestDto));
 
         String result = mvc.perform(get("/requests/all")
@@ -128,31 +123,28 @@ class ItemRequestControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(List.of(requestDto)));
     }
 
-    @SneakyThrows
     @Test
-    void findAll_whenParamFromIsNotValid_thenStatusIsBadRequest() {
+    void findAll_whenParamFromIsNotValid_thenStatusIsBadRequest() throws Exception {
         mvc.perform(get("/requests/all").header("X-Sharer-User-Id", 1)
                         .param("from", "-1")
                         .param("size", "10"))
                 .andExpect(status().isBadRequest());
 
-        verify(requestService, never()).findAll(anyLong(), anyInt(), anyInt());
+        verify(requestService, never()).findAll(anyLong(), any(Pageable.class));
     }
 
-    @SneakyThrows
     @Test
-    void findAll_whenParamSizeIsNotValid_thenStatusIsBadRequest() {
+    void findAll_whenParamSizeIsNotValid_thenStatusIsBadRequest() throws Exception {
         mvc.perform(get("/requests/all").header("X-Sharer-User-Id", 1)
                         .param("from", "5")
                         .param("size", "0"))
                 .andExpect(status().isBadRequest());
 
-        verify(requestService, never()).findAll(anyLong(), anyInt(), anyInt());
+        verify(requestService, never()).findAll(anyLong(), any(Pageable.class));
     }
 
-    @SneakyThrows
     @Test
-    void findAllByUser_whenArgsIsValid_thenStatusIsOkAndReturnListOfRequestDto() {
+    void findAllByUser_whenArgsIsValid_thenStatusIsOkAndReturnListOfRequestDto() throws Exception {
         when(requestService.findAllByUser(anyLong()))
                 .thenReturn(List.of(requestDto));
 
@@ -166,9 +158,8 @@ class ItemRequestControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(List.of(requestDto)));
     }
 
-    @SneakyThrows
     @Test
-    void findAllByUser_whenUserNotFound_thenStatusIsNotFound() {
+    void findAllByUser_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         when(requestService.findAllByUser(anyLong()))
                 .thenThrow(NotFoundException.class);
 
@@ -177,9 +168,8 @@ class ItemRequestControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void findById_whenArgsISValid_thenStatusIsOkAndReturnRequestDto() {
+    void findById_whenArgsISValid_thenStatusIsOkAndReturnRequestDto() throws Exception {
         when(requestService.findById(anyLong(), anyLong()))
                 .thenReturn(requestDto);
 
@@ -193,9 +183,8 @@ class ItemRequestControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(requestDto));
     }
 
-    @SneakyThrows
     @Test
-    void findById_whenUserOrItemNotFound_thenStatusIsNotFound() {
+    void findById_whenUserOrItemNotFound_thenStatusIsNotFound() throws Exception {
         when(requestService.findById(anyLong(), anyLong()))
                 .thenThrow(NotFoundException.class);
 

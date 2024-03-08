@@ -9,7 +9,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import ru.practicum.shareit.booking.BookingState;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
@@ -349,7 +351,10 @@ class BookingServiceImplTest {
         when(bookingRepository.findAllByBookerId(anyLong(), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByUserQuery(userId, ALL, from, size);
+        List<BookingDto> result = bookingService.getAllByUserQuery(
+                userId,
+                ALL,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -367,7 +372,10 @@ class BookingServiceImplTest {
                 anyLong(), any(LocalDateTime.class), any(LocalDateTime.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByUserQuery(userId, CURRENT, from, size);
+        List<BookingDto> result = bookingService.getAllByUserQuery(
+                userId,
+                CURRENT,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -386,7 +394,10 @@ class BookingServiceImplTest {
                 anyLong(), any(LocalDateTime.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByUserQuery(userId, FUTURE, from, size);
+        List<BookingDto> result = bookingService.getAllByUserQuery(
+                userId,
+                FUTURE,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -405,7 +416,10 @@ class BookingServiceImplTest {
                 anyLong(), any(LocalDateTime.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByUserQuery(userId, PAST, from, size);
+        List<BookingDto> result = bookingService.getAllByUserQuery(
+                userId,
+                PAST,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -424,7 +438,10 @@ class BookingServiceImplTest {
                 anyLong(), any(BookingStatus.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByUserQuery(userId, BookingState.REJECTED, from, size);
+        List<BookingDto> result = bookingService.getAllByUserQuery(
+                userId,
+                BookingState.REJECTED,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -443,7 +460,10 @@ class BookingServiceImplTest {
                 anyLong(), any(BookingStatus.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByUserQuery(userId, BookingState.WAITING, from, size);
+        List<BookingDto> result = bookingService.getAllByUserQuery(
+                userId,
+                BookingState.WAITING,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -460,7 +480,10 @@ class BookingServiceImplTest {
                 .thenReturn(FALSE);
 
         NotFoundException e = assertThrows(NotFoundException.class,
-                () -> bookingService.getAllByUserQuery(userId, ALL, from, size));
+                () -> bookingService.getAllByUserQuery(
+                        userId,
+                        ALL,
+                        PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"))));
 
         assertThat(e.getMessage()).isEqualTo(String.format("User id=%d not found", userId));
 
@@ -486,7 +509,10 @@ void getAllByOwnerQuery_whenStateIsAll_thenReturnAllBookings() {
     when(bookingRepository.findAllByItemOwnerId(anyLong(), any(Pageable.class)))
             .thenReturn(List.of(booking));
 
-    List<BookingDto> result = bookingService.getAllByOwnerQuery(userId, ALL, from, size);
+    List<BookingDto> result = bookingService.getAllByOwnerQuery(
+            userId,
+            ALL,
+            PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
     assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -504,7 +530,10 @@ void getAllByOwnerQuery_whenStateIsAll_thenReturnAllBookings() {
                 anyLong(), any(LocalDateTime.class), any(LocalDateTime.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByOwnerQuery(userId, CURRENT, from, size);
+        List<BookingDto> result = bookingService.getAllByOwnerQuery(
+                userId,
+                CURRENT,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -523,7 +552,10 @@ void getAllByOwnerQuery_whenStateIsAll_thenReturnAllBookings() {
                 anyLong(), any(LocalDateTime.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByOwnerQuery(userId, FUTURE, from, size);
+        List<BookingDto> result = bookingService.getAllByOwnerQuery(
+                userId,
+                FUTURE,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -542,7 +574,10 @@ void getAllByOwnerQuery_whenStateIsAll_thenReturnAllBookings() {
                 anyLong(), any(LocalDateTime.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByOwnerQuery(userId, PAST, from, size);
+        List<BookingDto> result = bookingService.getAllByOwnerQuery(
+                userId,
+                PAST,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -561,7 +596,10 @@ void getAllByOwnerQuery_whenStateIsAll_thenReturnAllBookings() {
                 anyLong(), any(BookingStatus.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByOwnerQuery(userId, BookingState.REJECTED, from, size);
+        List<BookingDto> result = bookingService.getAllByOwnerQuery(
+                userId,
+                BookingState.REJECTED,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -580,7 +618,10 @@ void getAllByOwnerQuery_whenStateIsAll_thenReturnAllBookings() {
                 anyLong(), any(BookingStatus.class), any(Pageable.class)))
                 .thenReturn(List.of(booking));
 
-        List<BookingDto> result = bookingService.getAllByOwnerQuery(userId, BookingState.WAITING, from, size);
+        List<BookingDto> result = bookingService.getAllByOwnerQuery(
+                userId,
+                BookingState.WAITING,
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime")));
 
         assertThat(result).isEqualTo(List.of(bookingDto));
 
@@ -597,7 +638,10 @@ void getAllByOwnerQuery_whenStateIsAll_thenReturnAllBookings() {
                 .thenReturn(FALSE);
 
         NotFoundException e = assertThrows(NotFoundException.class,
-                () -> bookingService.getAllByOwnerQuery(userId, ALL, from, size));
+                () -> bookingService.getAllByOwnerQuery(
+                        userId,
+                        ALL,
+                        PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "startTime"))));
 
         assertThat(e.getMessage()).isEqualTo(String.format("User id=%d not found", userId));
 

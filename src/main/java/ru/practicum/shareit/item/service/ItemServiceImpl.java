@@ -1,7 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.model.Booking;
@@ -48,19 +48,14 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getAllByOwner(Long userId, int from, int size) {
-        LocalDateTime now = LocalDateTime.now();
+    public List<ItemDto> getAllByOwner(Long userId, Pageable pageable) {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException(String.format("User id=%d not found", userId));
         }
-        Sort sort = Sort.by("id").ascending();
-        List<ItemDto> userItems =
-                itemMapper.toListItemDto(
-                        itemRepository.findAllByOwnerId(
-                                userId, PageRequest.of(from / size, size, Sort.by(Sort.Direction.ASC, "id"))));
+        List<Item> userItems = itemRepository.findAllByOwnerId(userId, pageable);
 
         List<Long> itemIds = userItems.stream()
-                .map(ItemDto::getId)
+                .map(Item::getId)
                 .collect(Collectors.toList());
 
         List<Booking> itemsBookings = bookingRepository
@@ -73,21 +68,11 @@ public class ItemServiceImpl implements ItemService {
         Map<Long, List<Comment>> itemsCommentsMap = itemsComments.stream()
                 .collect(Collectors.groupingBy(comment -> comment.getItem().getId()));
 
-        for (ItemDto itemDto : userItems) {
-            Long id = itemDto.getId();
-            itemDto.setLastBooking(
-                    itemMapper.map(getLastBooking(itemBookingsMap.getOrDefault(id, Collections.emptyList()), now)));
-            itemDto.setNextBooking(
-                    itemMapper.map(getNextBooking(itemBookingsMap.getOrDefault(id, Collections.emptyList()), now)));
-            itemDto.setComments(commentMapper.toListCommentDto(
-                    itemsCommentsMap.getOrDefault(id, Collections.emptyList())));
-        }
-        return userItems;
+        return itemMapper.toFullItemDtoList(userItems, itemBookingsMap, itemsCommentsMap);
     }
 
     @Override
     public ItemDto getItem(Long itemId, long userId) {
-        LocalDateTime now = LocalDateTime.now();
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new NotFoundException(String.format("Item id=%d not found", itemId)));
         ItemDto itemDto = itemMapper.toItemDto(item);
@@ -96,9 +81,9 @@ public class ItemServiceImpl implements ItemService {
                         itemId, BookingStatus.APPROVED, Sort.by("startTime").ascending());
         if (item.getOwner().getId().equals(userId)) {
             itemDto.setNextBooking(
-                    itemMapper.map(getNextBooking(itemBookings, now)));
+                    itemMapper.map(getNextBooking(itemBookings)));
             itemDto.setLastBooking(
-                    itemMapper.map(getLastBooking(itemBookings, now)));
+                    itemMapper.map(getLastBooking(itemBookings)));
         }
         itemDto.setComments(commentMapper
                 .toListCommentDto(commentRepository.findAllByItemId(itemId, Sort.by("created").descending())));
@@ -140,31 +125,24 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public List<ItemDto> getSearcherItems(String text, int from, int size) {
+    public List<ItemDto> getSearcherItems(String text, Pageable pageable) {
         if (text.isEmpty()) {
             return Collections.emptyList();
         }
-        List<ItemDto> items = itemMapper.toListItemDto(
-                itemRepository.findAllAvailableBySearch(
+        List<Item> items = itemRepository.findAllAvailableBySearch(
                         text.toLowerCase(),
                         text.toLowerCase(),
                         TRUE,
-                        PageRequest.of(from / size, size)));
-
+                        pageable);
         List<Long> itemIds = items.stream()
-                .map(ItemDto::getId)
+                .map(Item::getId)
                 .collect(Collectors.toList());
-
         List<Comment> itemsComments = commentRepository
                 .findAllByItemIdIn(itemIds, Sort.by("created").descending());
         Map<Long, List<Comment>> itemsCommentsMap = itemsComments.stream()
                 .collect(Collectors.groupingBy(comment -> comment.getItem().getId()));
 
-        for (ItemDto item : items) {
-            item.setComments(commentMapper.toListCommentDto(
-                    itemsCommentsMap.getOrDefault(item.getId(), Collections.emptyList())));
-        }
-        return items;
+        return itemMapper.toFullItemDtoList(items, Collections.EMPTY_MAP, itemsCommentsMap);
     }
 
     @Override
@@ -184,23 +162,23 @@ public class ItemServiceImpl implements ItemService {
         return commentMapper.toCommentDto(commentRepository.save(comment));
     }
 
-    private Booking getLastBooking(List<Booking> bookings, LocalDateTime now) {
-        if (bookings == null) {
+    public static Booking getLastBooking(List<Booking> bookings) {
+        if (bookings == null || bookings.isEmpty()) {
             return null;
         }
         Collections.reverse(bookings);
         return bookings.stream()
-                .filter(booking -> booking.getStartTime().isBefore(now))
+                .filter(booking -> booking.getStartTime().isBefore(LocalDateTime.now()))
                 .findFirst()
                 .orElse(null);
     }
 
-    private Booking getNextBooking(List<Booking> bookings, LocalDateTime now) {
-        if (bookings == null) {
+    public static Booking getNextBooking(List<Booking> bookings) {
+        if (bookings == null || bookings.isEmpty()) {
             return null;
         }
         return bookings.stream()
-                .filter(booking -> booking.getStartTime().isAfter(now))
+                .filter(booking -> booking.getStartTime().isAfter(LocalDateTime.now()))
                 .findFirst()
                 .orElse(null);
     }

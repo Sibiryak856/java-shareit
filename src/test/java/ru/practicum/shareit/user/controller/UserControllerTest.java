@@ -1,7 +1,6 @@
 package ru.practicum.shareit.user.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -81,9 +80,8 @@ class UserControllerTest {
         users = null;
     }
 
-    @SneakyThrows
     @Test
-    void getAll_whenArgsIsValid_thenStatusIsOkAndReturnUsersList() {
+    void getAll_whenArgsIsValid_thenStatusIsOkAndReturnUsersList() throws Exception {
         users.add(userDto);
 
         when(userService.getAll())
@@ -98,9 +96,8 @@ class UserControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(users));
     }
 
-    @SneakyThrows
     @Test
-    void getUser_whenUserIsFound_thenStatusIsOkAndReturnUserDto() {
+    void getUser_whenUserIsFound_thenStatusIsOkAndReturnUserDto() throws Exception {
         when(userService.getUser(anyLong()))
                 .thenReturn(userDto);
 
@@ -113,9 +110,8 @@ class UserControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(userDto));
     }
 
-    @SneakyThrows
     @Test
-    void getUser_whenUserNotFound_thenStatusIsNotFound() {
+    void getUser_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         when(userService.getUser(anyLong()))
                 .thenThrow(NotFoundException.class);
 
@@ -123,9 +119,8 @@ class UserControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void create_whenUserIsValid_thenStatusIsCreatedAndReturnSavedUser() {
+    void create_whenUserIsValid_thenStatusIsCreatedAndReturnSavedUser() throws Exception {
         when(userService.create(any(UserCreateDto.class)))
                 .thenReturn(userDto);
 
@@ -142,9 +137,8 @@ class UserControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(userDto));
     }
 
-    @SneakyThrows
     @Test
-    void create_whenUserEmailIsNotValid_thenReturnBadRequest() {
+    void create_whenUserEmailIsNotValid_thenReturnBadRequest() throws Exception {
         userCreateDto.setEmail("e.ru");
         mvc.perform(post("/users")
                         .content(String.valueOf(mapper.writeValueAsString(userCreateDto)))
@@ -156,9 +150,8 @@ class UserControllerTest {
         verify(userService, never()).create(userCreateDto);
     }
 
-    @SneakyThrows
     @Test
-    void create_whenUserEmailIsNull_thenReturnBadRequest() {
+    void create_whenUserEmailIsNull_thenReturnBadRequest() throws Exception {
         userCreateDto.setEmail(null);
         mvc.perform(post("/users")
                         .content(String.valueOf(mapper.writeValueAsString(userCreateDto)))
@@ -170,9 +163,8 @@ class UserControllerTest {
         verify(userService, never()).create(userCreateDto);
     }
 
-    @SneakyThrows
     @Test
-    void create_whenUserNameIsBlank_thenReturnBadRequest() {
+    void create_whenUserNameIsBlank_thenReturnBadRequest() throws Exception {
         userCreateDto.setName("");
         mvc.perform(post("/users")
                         .content(String.valueOf(mapper.writeValueAsString(userCreateDto)))
@@ -184,9 +176,8 @@ class UserControllerTest {
         verify(userService, never()).create(userCreateDto);
     }
 
-    @SneakyThrows
     @Test
-    void update_whenUserIsValid_thenStatusIsOkAndReturnUpdatedUser() {
+    void update_whenUserIsValid_thenStatusIsOkAndReturnUpdatedUser() throws Exception {
         when(userService.update(anyLong(), any(UserUpdateDto.class)))
                 .thenReturn(userUpdatedDto);
 
@@ -203,9 +194,8 @@ class UserControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(userUpdatedDto));
     }
 
-    @SneakyThrows
     @Test
-    void update_whenUserEmailIsNotValid_thenBadRequest() {
+    void update_whenUserEmailIsNotValid_thenBadRequest() throws Exception {
         userDtoToUpdate.setEmail("e.ru");
 
         mvc.perform(patch("/users/{id}", userDto.getId())
@@ -218,9 +208,8 @@ class UserControllerTest {
         verify(userService, never()).update(userDto.getId(), userDtoToUpdate);
     }
 
-    @SneakyThrows
     @Test
-    void delete_whenArgsIsValid_thenStatusIsNoContent() {
+    void delete_whenArgsIsValid_thenStatusIsNoContent() throws Exception {
         mvc.perform(MockMvcRequestBuilders.delete("/users/{id}", userDto.getId()))
                 .andExpect(status().isNoContent());
 

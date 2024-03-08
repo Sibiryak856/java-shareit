@@ -1,13 +1,13 @@
 package ru.practicum.shareit.item.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -91,10 +91,9 @@ class ItemControllerTest {
         items = null;
     }
 
-    @SneakyThrows
     @Test
-    void getAllByUser_whenUsersExist_thenStatusOkAndReturnList() {
-        when(itemService.getAllByOwner(anyLong(), anyInt(), anyInt()))
+    void getAllByUser_whenUsersExist_thenStatusOkAndReturnList() throws Exception {
+        when(itemService.getAllByOwner(anyLong(), any(Pageable.class)))
                 .thenReturn(List.of(itemDto));
 
         String result = mvc.perform(get("/items")
@@ -109,34 +108,31 @@ class ItemControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(List.of(itemDto)));
     }
 
-    @SneakyThrows
     @Test
-    void getAllByUser_whenRequestParamFromFalse_thenBadRequest() {
+    void getAllByUser_whenRequestParamFromFalse_thenBadRequest() throws Exception {
         mvc.perform(get("/items")
                         .header("X-Sharer-User-Id", 1)
                         .param("from", "-1")
                         .param("size", "10"))
                 .andExpect(status().isBadRequest());
 
-        verify(itemService, never()).getAllByOwner(anyLong(), anyInt(), anyInt());
+        verify(itemService, never()).getAllByOwner(anyLong(), any(Pageable.class));
     }
 
-    @SneakyThrows
     @Test
-    void getAllByUser_whenRequestSizeFromFalse_thenBadRequest() {
+    void getAllByUser_whenRequestSizeFromFalse_thenBadRequest() throws Exception {
         mvc.perform(get("/items")
                         .header("X-Sharer-User-Id", 1)
                         .param("from", "5")
                         .param("size", "0"))
                 .andExpect(status().isBadRequest());
 
-        verify(itemService, never()).getAllByOwner(anyLong(), anyInt(), anyInt());
+        verify(itemService, never()).getAllByOwner(anyLong(), any(Pageable.class));
     }
 
-    @SneakyThrows
     @Test
-    void getAllByUser_whenUserNotFound_thenStatusIsNotFound() {
-        when(itemService.getAllByOwner(anyLong(), anyInt(), anyInt()))
+    void getAllByUser_whenUserNotFound_thenStatusIsNotFound() throws Exception {
+        when(itemService.getAllByOwner(anyLong(), any(Pageable.class)))
                 .thenThrow(NotFoundException.class);
 
         mvc.perform(get("/items")
@@ -146,9 +142,8 @@ class ItemControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void getItem_whenArgsIsValid_thenStatusIsOkAndReturnItemDto() {
+    void getItem_whenArgsIsValid_thenStatusIsOkAndReturnItemDto() throws Exception {
         when(itemService.getItem(anyLong(), anyLong()))
                 .thenReturn(itemDto);
 
@@ -162,9 +157,8 @@ class ItemControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(itemDto));
     }
 
-    @SneakyThrows
     @Test
-    void getItem_whenItemNotFound_thenStatusIsNotFound() {
+    void getItem_whenItemNotFound_thenStatusIsNotFound() throws Exception {
         when(itemService.getItem(anyLong(), anyLong()))
                 .thenThrow(NotFoundException.class);
 
@@ -175,9 +169,8 @@ class ItemControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void create_whenItemIsValid_thenStatusIsCreatedAndReturnSavedItem() {
+    void create_whenItemIsValid_thenStatusIsCreatedAndReturnSavedItem() throws Exception {
         when(itemService.create(any(ItemCreateDto.class), anyLong()))
                 .thenReturn(itemDto);
 
@@ -195,9 +188,8 @@ class ItemControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(itemDto));
     }
 
-    @SneakyThrows
     @Test
-    void create_whenItemIsNotValid_thenStatusIsBadRequest() {
+    void create_whenItemIsNotValid_thenStatusIsBadRequest() throws Exception {
         itemCreateDto.setName("");
 
         mvc.perform(post("/items")
@@ -211,9 +203,8 @@ class ItemControllerTest {
         verify(itemService, never()).create(any(ItemCreateDto.class), anyLong());
     }
 
-    @SneakyThrows
     @Test
-    void update_whenItemIsValid_thenStatusIsOkAndReturnUpdatedItem() {
+    void update_whenItemIsValid_thenStatusIsOkAndReturnUpdatedItem() throws Exception {
         when(itemService.update(anyLong(), anyLong(), any(ItemUpdateDto.class)))
                 .thenReturn(updatedItemDto);
 
@@ -231,9 +222,8 @@ class ItemControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(updatedItemDto));
     }
 
-    @SneakyThrows
     @Test
-    void update_whenFieldsEmpty_thenStatusIsOkAndReturnUpdatedItem() {
+    void update_whenFieldsEmpty_thenStatusIsOkAndReturnUpdatedItem() throws Exception {
         itemUpdateDto.setName(null);
         itemUpdateDto.setDescription(null);
         when(itemService.update(anyLong(), anyLong(), any(ItemUpdateDto.class)))
@@ -254,9 +244,8 @@ class ItemControllerTest {
         verify(itemService).update(anyLong(), anyLong(), any(ItemUpdateDto.class));
     }
 
-    @SneakyThrows
     @Test
-    void update_whenUserOrItemNotFound_thenStatusIsNotFound() {
+    void update_whenUserOrItemNotFound_thenStatusIsNotFound() throws Exception {
         when(itemService.update(anyLong(), anyLong(), any(ItemUpdateDto.class)))
                 .thenThrow(NotFoundException.class);
 
@@ -269,9 +258,8 @@ class ItemControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void update_whenUserIsNotOwner_thenStatusIsNotFound() {
+    void update_whenUserIsNotOwner_thenStatusIsNotFound() throws Exception {
         when(itemService.update(anyLong(), anyLong(), any(ItemUpdateDto.class)))
                 .thenThrow(NotAccessException.class);
 
@@ -284,10 +272,8 @@ class ItemControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-
-    @SneakyThrows
     @Test
-    void delete() {
+    void delete() throws Exception {
         Long ownerId = 1L;
         mvc.perform(MockMvcRequestBuilders.delete("/items/{itemId}", itemDto.getId())
                         .header("X-Sharer-User-Id", 1))
@@ -296,11 +282,10 @@ class ItemControllerTest {
         verify(itemService).delete(itemDto.getId(), ownerId);
     }
 
-    @SneakyThrows
     @Test
-    void search_whenArgsIsValid_thenStatusIsOkAndReturnListOfItemDto() {
+    void search_whenArgsIsValid_thenStatusIsOkAndReturnListOfItemDto() throws Exception {
         items.add(itemDto);
-        when(itemService.getSearcherItems(anyString(), anyInt(), anyInt()))
+        when(itemService.getSearcherItems(anyString(), any(Pageable.class)))
                 .thenReturn(items);
 
         String result = mvc.perform(get("/items/search")
@@ -315,9 +300,8 @@ class ItemControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(items));
     }
 
-    @SneakyThrows
     @Test
-    void createComment_whenCommentIsValid_thenStatusIsOkAndReturnCommentDto() {
+    void createComment_whenCommentIsValid_thenStatusIsOkAndReturnCommentDto() throws Exception {
         CommentDto commentDto = CommentDto.builder()
                 .id(1L)
                 .text("text")
@@ -344,9 +328,8 @@ class ItemControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(commentDto));
     }
 
-    @SneakyThrows
     @Test
-    void createComment_whenUserOrItemNotFound_thenStatusIsNotFound() {
+    void createComment_whenUserOrItemNotFound_thenStatusIsNotFound() throws Exception {
         when(itemService.create(any(CommentCreateDto.class), anyLong(), anyLong()))
                 .thenThrow(NotFoundException.class);
 
@@ -362,9 +345,8 @@ class ItemControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void createComment_whenUserHasNotBookings_thenStatusIsBadRequest() {
+    void createComment_whenUserHasNotBookings_thenStatusIsBadRequest() throws Exception {
         when(itemService.create(any(CommentCreateDto.class), anyLong(), anyLong()))
                 .thenThrow(IllegalArgumentException.class);
 

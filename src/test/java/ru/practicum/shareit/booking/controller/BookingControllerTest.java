@@ -1,12 +1,13 @@
 package ru.practicum.shareit.booking.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.practicum.shareit.booking.BookingState;
@@ -60,9 +61,14 @@ class BookingControllerTest {
                 .build();
     }
 
-    @SneakyThrows
+    @AfterEach
+    void clean() {
+        bookingCreateDto = null;
+        bookingDto = null;
+    }
+
     @Test
-    void create_whenBookingIsValid_thenStatusIsCreatedAndReturnBookingDto() {
+    void create_whenBookingIsValid_thenStatusIsCreatedAndReturnBookingDto() throws Exception {
         when(bookingService.create(any(BookingCreateDto.class), anyLong()))
                 .thenReturn(bookingDto);
 
@@ -80,9 +86,8 @@ class BookingControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(bookingDto));
     }
 
-    @SneakyThrows
     @Test
-    void create_whenStartTimeInPast_thenStatusIBadRequest() {
+    void create_whenStartTimeInPast_thenStatusIBadRequest() throws Exception {
         bookingCreateDto.setStartTime(LocalDateTime.now().minusMinutes(3));
 
         mvc.perform(post("/bookings")
@@ -96,9 +101,8 @@ class BookingControllerTest {
         verify(bookingService, never()).create(any(BookingCreateDto.class), anyLong());
     }
 
-    @SneakyThrows
     @Test
-    void create_whenEndBeforeStart_thenStatusIBadRequest() {
+    void create_whenEndBeforeStart_thenStatusIBadRequest() throws Exception {
         bookingCreateDto.setEndTime(LocalDateTime.now().minusMinutes(3));
 
         mvc.perform(post("/bookings")
@@ -112,9 +116,8 @@ class BookingControllerTest {
         verify(bookingService, never()).create(any(BookingCreateDto.class), anyLong());
     }
 
-    @SneakyThrows
     @Test
-    void create_whenItemIdIsNull_thenStatusIBadRequest() {
+    void create_whenItemIdIsNull_thenStatusIBadRequest() throws Exception {
         bookingCreateDto.setItemId(null);
 
         mvc.perform(post("/bookings")
@@ -128,9 +131,8 @@ class BookingControllerTest {
         verify(bookingService, never()).create(any(BookingCreateDto.class), anyLong());
     }
 
-    @SneakyThrows
     @Test
-    void create_whenUserNotFound_thenStatusIsNotFound() {
+    void create_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         when(bookingService.create(any(BookingCreateDto.class), anyLong()))
                 .thenThrow(NotFoundException.class);
 
@@ -143,9 +145,8 @@ class BookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void update_whenRequestIsValid_thenStatusIsOkAndReturnUpdatedBookingDto() {
+    void update_whenRequestIsValid_thenStatusIsOkAndReturnUpdatedBookingDto() throws Exception {
         bookingDto.setStatus(BookingStatus.APPROVED);
         Long userId = 1L;
         when(bookingService.update(anyLong(), anyLong(), anyBoolean()))
@@ -165,9 +166,8 @@ class BookingControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(bookingDto));
     }
 
-    @SneakyThrows
     @Test
-    void update_whenRequestDataIsNotValid_thenStatusIsNotFound() {
+    void update_whenRequestDataIsNotValid_thenStatusIsNotFound() throws Exception {
         Long userId = 10L;
         when(bookingService.update(anyLong(), anyLong(), anyBoolean()))
                 .thenThrow(NotFoundException.class);
@@ -181,9 +181,8 @@ class BookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void update_whenRequestDataIsNotAccepted_thenStatusIsNotFound() {
+    void update_whenRequestDataIsNotAccepted_thenStatusIsNotFound() throws Exception {
         Long userId = 10L;
         when(bookingService.update(anyLong(), anyLong(), anyBoolean()))
                 .thenThrow(NotAccessException.class);
@@ -197,9 +196,8 @@ class BookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void update_whenStatusAlreadyChanged_thenStatusIsBadRequest() {
+    void update_whenStatusAlreadyChanged_thenStatusIsBadRequest() throws Exception {
         Long userId = 10L;
         when(bookingService.update(anyLong(), anyLong(), anyBoolean()))
                 .thenThrow(IllegalArgumentException.class);
@@ -213,9 +211,8 @@ class BookingControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
-    @SneakyThrows
     @Test
-    void getById_whenRequestIsValid_thenStatusIsOk() {
+    void getById_whenRequestIsValid_thenStatusIsOk() throws Exception {
         Long userId = 1L;
         when(bookingService.getBooking(anyLong(), anyLong()))
                 .thenReturn(bookingDto);
@@ -230,9 +227,8 @@ class BookingControllerTest {
         verify(bookingService).getBooking(anyLong(), anyLong());
     }
 
-    @SneakyThrows
     @Test
-    void getById_whenUserNotFound_thenStatusIsNotFound() {
+    void getById_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         Long userId = 1L;
         when(bookingService.getBooking(anyLong(), anyLong()))
                 .thenThrow(NotFoundException.class);
@@ -247,9 +243,8 @@ class BookingControllerTest {
         verify(bookingService).getBooking(anyLong(), anyLong());
     }
 
-    @SneakyThrows
     @Test
-    void getById_whenUserIsNotOwner_thenStatusIsNotFound() {
+    void getById_whenUserIsNotOwner_thenStatusIsNotFound() throws Exception {
         Long userId = 1L;
         when(bookingService.getBooking(anyLong(), anyLong()))
                 .thenThrow(NotAccessException.class);
@@ -262,12 +257,10 @@ class BookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-
-    @SneakyThrows
     @Test
-    void getAllByUserQuery_whenRequestIsValid_thenStatusIsOkAndReturnListOfBookingDtos() {
+    void getAllByUserQuery_whenRequestIsValid_thenStatusIsOkAndReturnListOfBookingDto() throws Exception {
         Long userId = 1L;
-        when(bookingService.getAllByUserQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
+        when(bookingService.getAllByUserQuery(anyLong(), any(BookingState.class), any(Pageable.class)))
                 .thenReturn(List.of(bookingDto));
 
         String result = mvc.perform(get("/bookings", userId)
@@ -286,11 +279,10 @@ class BookingControllerTest {
         assertThat(result).isEqualTo(mapper.writeValueAsString(List.of(bookingDto)));
     }
 
-    @SneakyThrows
     @Test
-    void getAllByUserQuery_whenUserNotFound_thenStatusIsNotFound() {
+    void getAllByUserQuery_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         Long userId = 1L;
-        when(bookingService.getAllByUserQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
+        when(bookingService.getAllByUserQuery(anyLong(), any(BookingState.class), any(Pageable.class)))
                 .thenThrow(NotFoundException.class);
 
         mvc.perform(get("/bookings", userId)
@@ -304,11 +296,10 @@ class BookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void getAllByUserQuery_whenStateIsNotValid_thenStatusIsBadRequest() {
+    void getAllByUserQuery_whenStateIsNotValid_thenStatusIsBadRequest() throws Exception {
         Long userId = 1L;
-        when(bookingService.getAllByUserQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
+        when(bookingService.getAllByUserQuery(anyLong(), any(BookingState.class), any(Pageable.class)))
                 .thenThrow(IllegalArgumentException.class);
 
         mvc.perform(get("/bookings", userId)
@@ -321,12 +312,11 @@ class BookingControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(bookingService, never()).getAllByUserQuery(anyLong(), any(BookingState.class), anyInt(), anyInt());
+        verify(bookingService, never()).getAllByUserQuery(anyLong(), any(BookingState.class), any(Pageable.class));
     }
 
-    @SneakyThrows
     @Test
-    void getAllByUserQuery_whenParamFromIsNotValid_thenStatusIsBadRequest() {
+    void getAllByUserQuery_whenParamFromIsNotValid_thenStatusIsBadRequest() throws Exception {
         Long userId = 1L;
 
         mvc.perform(get("/bookings", userId)
@@ -339,12 +329,11 @@ class BookingControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(bookingService, never()).getAllByUserQuery(anyLong(), any(BookingState.class), anyInt(), anyInt());
+        verify(bookingService, never()).getAllByUserQuery(anyLong(), any(BookingState.class), any(Pageable.class));
     }
 
-    @SneakyThrows
     @Test
-    void getAllByUserQuery_whenParamSizeIsNotValid_thenStatusIsBadRequest() {
+    void getAllByUserQuery_whenParamSizeIsNotValid_thenStatusIsBadRequest() throws Exception {
         Long userId = 1L;
 
         mvc.perform(get("/bookings", userId)
@@ -357,14 +346,13 @@ class BookingControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(bookingService, never()).getAllByUserQuery(anyLong(), any(BookingState.class), anyInt(), anyInt());
+        verify(bookingService, never()).getAllByUserQuery(anyLong(), any(BookingState.class), any(Pageable.class));
     }
 
-    @SneakyThrows
     @Test
-    void getAllByOwnerQuery_whenRequestIsValid_thenStatusIsOkAndReturnListOfBookingDtos() {
+    void getAllByOwnerQuery_whenRequestIsValid_thenStatusIsOkAndReturnListOfBookingDto() throws Exception {
         Long userId = 1L;
-        when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
+        when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), any(Pageable.class)))
                 .thenReturn(List.of(bookingDto));
 
         mvc.perform(get("/bookings/owner", userId)
@@ -378,11 +366,10 @@ class BookingControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @SneakyThrows
     @Test
-    void getAllByOwnerQuery_whenUserNotFound_thenStatusIsNotFound() {
+    void getAllByOwnerQuery_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         Long userId = 10L;
-        when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
+        when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), any(Pageable.class)))
                 .thenThrow(NotFoundException.class);
 
         mvc.perform(get("/bookings/owner", userId)
@@ -396,11 +383,10 @@ class BookingControllerTest {
                 .andExpect(status().isNotFound());
     }
 
-    @SneakyThrows
     @Test
-    void getAllByOwnerQuery_whenStateIsNotValid_thenStatusIsBadRequest() {
+    void getAllByOwnerQuery_whenStateIsNotValid_thenStatusIsBadRequest() throws Exception {
         Long userId = 1L;
-        when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), anyInt(), anyInt()))
+        when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), any(Pageable.class)))
                 .thenThrow(IllegalArgumentException.class);
 
         mvc.perform(get("/bookings/owner", userId)
@@ -413,12 +399,11 @@ class BookingControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(bookingService, never()).getAllByOwnerQuery(anyLong(), any(BookingState.class), anyInt(), anyInt());
+        verify(bookingService, never()).getAllByOwnerQuery(anyLong(), any(BookingState.class), any(Pageable.class));
     }
 
-    @SneakyThrows
     @Test
-    void getAllByOwnerQuery_whenParamFromIsNotValid_thenStatusIsBadRequest() {
+    void getAllByOwnerQuery_whenParamFromIsNotValid_thenStatusIsBadRequest() throws Exception {
         Long userId = 1L;
 
         mvc.perform(get("/bookings/owner", userId)
@@ -431,12 +416,11 @@ class BookingControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(bookingService, never()).getAllByOwnerQuery(anyLong(), any(BookingState.class), anyInt(), anyInt());
+        verify(bookingService, never()).getAllByOwnerQuery(anyLong(), any(BookingState.class), any(Pageable.class));
     }
 
-    @SneakyThrows
     @Test
-    void getAllByOwnerQuery_whenParamSizeIsNotValid_thenStatusIsBadRequest() {
+    void getAllByOwnerQuery_whenParamSizeIsNotValid_thenStatusIsBadRequest() throws Exception {
         Long userId = 1L;
 
         mvc.perform(get("/bookings/owner", userId)
@@ -449,6 +433,6 @@ class BookingControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest());
 
-        verify(bookingService, never()).getAllByOwnerQuery(anyLong(), any(BookingState.class), anyInt(), anyInt());
+        verify(bookingService, never()).getAllByOwnerQuery(anyLong(), any(BookingState.class), any(Pageable.class));
     }
 }

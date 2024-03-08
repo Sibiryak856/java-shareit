@@ -6,10 +6,6 @@ import ru.practicum.shareit.user.model.User;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
-/**
- * TODO Sprint add-item-requests.
- */
-
 @Entity
 @Getter
 @Setter
@@ -27,7 +23,7 @@ public class ItemRequest {
     @Column(name = "DESCRIPTION")
     private String description;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "USER_ID")
     private User requestor;
 

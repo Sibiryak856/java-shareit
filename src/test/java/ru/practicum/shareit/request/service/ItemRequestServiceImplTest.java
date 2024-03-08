@@ -160,6 +160,8 @@ class ItemRequestServiceImplTest {
 
     @Test
     void findAll_whenRequestIsValid_thenReturnRequestDtoList() {
+        int from = 5;
+        int size = 10;
         requestDto.setItems(List.of(ItemDto.builder()
                 .id(1L)
                 .requestId(1L)
@@ -172,9 +174,11 @@ class ItemRequestServiceImplTest {
                         .requestId(1L)
                         .build()));
 
-        List<ItemRequestDto> itemRequestDtos = requestService.findAll(requestor.getId(), 10, 20);
+        List<ItemRequestDto> itemRequestDtoList = requestService.findAll(
+                requestor.getId(),
+                PageRequest.of(from / size, size, Sort.by(Sort.Direction.DESC, "created")));
 
-        assertThat(itemRequestDtos).isEqualTo(List.of(requestDto));
+        assertThat(itemRequestDtoList).isEqualTo(List.of(requestDto));
     }
 
     @Test

@@ -6,6 +6,8 @@ import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.json.JsonContent;
 
+import java.io.IOException;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JsonTest
@@ -15,7 +17,7 @@ class UserUpdateDtoTest {
     private JacksonTester<UserUpdateDto> json;
 
     @Test
-    void testUserUpdateDto() throws Exception {
+    void testUserUpdateDto() throws IOException {
         UserUpdateDto userUpdateDto = UserUpdateDto.builder()
                 .id(1L)
                 .name("updateName")
