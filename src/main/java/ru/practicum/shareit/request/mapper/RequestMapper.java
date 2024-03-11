@@ -31,14 +31,10 @@ public interface RequestMapper {
             return null;
         } else {
             List<ItemRequestDto> list = new ArrayList(itemRequests.size());
-            Iterator var3 = itemRequests.iterator();
-
-            while (var3.hasNext()) {
-                ItemRequest itemRequest = (ItemRequest)var3.next();
-                ItemRequestDto requestDto = this.toRequestDto(itemRequest);
+            itemRequests.stream().map(this::toRequestDto).forEach(requestDto -> {
                 requestDto.setItems(requestItems.getOrDefault(requestDto.getId(), Collections.emptyList()));
                 list.add(requestDto);
-            }
+            });
             return list;
         }
     }

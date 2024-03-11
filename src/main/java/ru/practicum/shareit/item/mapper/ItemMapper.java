@@ -48,11 +48,7 @@ public interface ItemMapper {
             return null;
         } else {
             List<ItemDto> list = new ArrayList<>(userItems.size());
-            Iterator var3 = userItems.iterator();
-
-            while (var3.hasNext()) {
-                Item item = (Item)var3.next();
-                ItemDto itemDto = this.toItemDto(item);
+            userItems.stream().map(this::toItemDto).forEach(itemDto -> {
                 long id = itemDto.getId();
                 itemDto.setComments(
                         commentMapper.toListCommentDto(
@@ -62,7 +58,7 @@ public interface ItemMapper {
                 itemDto.setNextBooking(
                         map(getNextBooking(itemBookingsMap.getOrDefault(id, Collections.emptyList()))));
                 list.add(itemDto);
-            }
+            });
             return list;
         }
     }
