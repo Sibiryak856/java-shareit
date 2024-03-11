@@ -2,6 +2,9 @@ package ru.practicum.shareit.booking.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +14,7 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -60,12 +64,15 @@ public class BookingController {
     @GetMapping
     public List<BookingDto> getAllByUserQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "ALL", required = false) String state
+            @RequestParam(defaultValue = "ALL", required = false) String state,
+            @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
+            @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit
     ) {
         log.debug("Request received: GET /bookings");
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
-        List<BookingDto> searchedBookings = bookingService.getAllByUserQuery(userId, bookingState);
+        Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.DESC, "startTime"));
+        List<BookingDto> searchedBookings = bookingService.getAllByUserQuery(userId, bookingState, pageable);
         log.debug("Request GET /bookings processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;
     }
@@ -73,12 +80,15 @@ public class BookingController {
     @GetMapping("/owner")
     public List<BookingDto> getAllByOwnerQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "ALL", required = false) String state
+            @RequestParam(defaultValue = "ALL", required = false) String state,
+            @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
+            @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit
     ) {
         log.debug("Request received: GET /bookings/owner");
         BookingState bookingState = BookingState.from(state)
                 .orElseThrow(() -> new IllegalArgumentException("Unknown state: " + state));
-        List<BookingDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, bookingState);
+        Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.DESC, "startTime"));
+        List<BookingDto> searchedBookings = bookingService.getAllByOwnerQuery(userId, bookingState, pageable);
         log.debug("Request GET /bookings/owner processed: searchedBookings: {}", searchedBookings);
         return searchedBookings;
     }
