@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.request.dto.RequestCreateDto;
 
@@ -15,7 +16,7 @@ import javax.validation.constraints.PositiveOrZero;
 @RequestMapping(path="/requests")
 @RequiredArgsConstructor
 @Slf4j
-@Valid
+@Validated
 public class RequestController {
     private final RequestClient requestClient;
 
@@ -26,9 +27,6 @@ public class RequestController {
         return requestClient.create(userId, requestDto);
     }
 
-    /**
-     * TODO from/size
-     */
     @GetMapping("/all")
     public ResponseEntity<Object> findAll(
             @RequestHeader("X-Sharer-User-Id") long userId,

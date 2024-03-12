@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping(path = "/users")
-@Validated
 @Slf4j
 public class UserController {
 
@@ -44,7 +43,7 @@ public class UserController {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
-    public UserDto create(@Valid @RequestBody UserCreateDto userCreateDto) {
+    public UserDto create(@RequestBody UserCreateDto userCreateDto) {
         log.info("Request received: POST /users: {}", userCreateDto);
         UserDto createdUser = userService.create(userCreateDto);
         log.info("Request POST /users processed: user={} is created", createdUser);
@@ -53,7 +52,7 @@ public class UserController {
 
     @PatchMapping("/{id}")
     public UserDto update(@PathVariable Long id,
-                          @Valid @RequestBody UserUpdateDto userUpdateDto) {
+                          @RequestBody UserUpdateDto userUpdateDto) {
         log.info("Request received: PATCH /users: {}", userUpdateDto);
         UserDto updatedUser = userService.update(id, userUpdateDto);
         log.info("Request PATCH /users processed: user: {} is updated", updatedUser);

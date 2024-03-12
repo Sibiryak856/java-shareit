@@ -17,6 +17,7 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -71,6 +72,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
     public List<ItemRequestDto> findAll(long userId, Pageable pageable) {
         List<ItemRequest> itemRequests = requestRepository.findAllByRequestorIdNot(
                         userId, pageable);
+        if (itemRequests.isEmpty()) {
+            return Collections.emptyList();
+        }
 
         List<Long> requestIds = itemRequests.stream()
                 .map(ItemRequest::getId)

@@ -25,8 +25,8 @@ public class ItemController {
     @GetMapping
     public ResponseEntity<Object> getAllByUser(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @PositiveOrZero @RequestParam(value = "from", defaultValue = "0") int from,
-            @Positive @RequestParam(value = "size", defaultValue = "10") int size) {
+            @PositiveOrZero @RequestParam(value = "from", defaultValue = "0", required = false) int from,
+            @Positive @RequestParam(value = "size", defaultValue = "10", required = false) int size) {
         log.info("Get items by userId={}", userId);
         return itemClient.getAllByUser(userId, from, size);
     }
@@ -61,10 +61,11 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Object> search(@RequestHeader("X-Sharer-User-Id") long userId,
-                                         @RequestParam String text,
-                                         @PositiveOrZero @RequestParam(value = "from", defaultValue = "0") int from,
-                                         @Positive @RequestParam(value = "size", defaultValue = "10") int size) {
+    public ResponseEntity<Object> search(
+            @RequestHeader("X-Sharer-User-Id") long userId,
+            @RequestParam String text,
+            @PositiveOrZero @RequestParam(value = "from", defaultValue = "0", required = false) int from,
+            @Positive @RequestParam(value = "size", defaultValue = "10", required = false) int size) {
         log.info("Searching text {}, userID={}, from={}, size={}", text, userId, from, size);
         return itemClient.search(userId, text, from, size);
     }

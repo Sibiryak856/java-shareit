@@ -37,8 +37,8 @@ public class ItemRequestController {
 
     @GetMapping("/all")
     public List<ItemRequestDto> findAll(@RequestHeader("X-Sharer-User-Id") long userId,
-                                        @RequestParam(value = "from", defaultValue = "0") int offset,
-                                        @RequestParam(value = "size", defaultValue = "10") int limit) {
+                                        @RequestParam(value = "from") int offset,
+                                        @RequestParam(value = "size") int limit) {
         log.info("Request received: GET /requests/all");
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.DESC, "created"));
         List<ItemRequestDto> requests = requestService.findAll(userId, pageable);
