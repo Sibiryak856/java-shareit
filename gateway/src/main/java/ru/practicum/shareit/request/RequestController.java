@@ -13,7 +13,7 @@ import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 
 @Controller
-@RequestMapping(path="/requests")
+@RequestMapping(path = "/requests")
 @RequiredArgsConstructor
 @Slf4j
 @Validated
