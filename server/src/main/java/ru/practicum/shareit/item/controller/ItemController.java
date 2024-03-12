@@ -6,18 +6,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.service.ItemService;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
 @Slf4j
-@Validated
 @RequestMapping("/items")
 public class ItemController {
 
@@ -30,8 +26,8 @@ public class ItemController {
 
     @GetMapping
     public List<ItemDto> getAllByUser(@RequestHeader("X-Sharer-User-Id") long userId,
-                                      @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
-                                      @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit) {
+                                      @RequestParam(value = "from") int offset,
+                                      @RequestParam(value = "size") int limit) {
         log.info("Request received: GET /items for user id= {}", userId);
         Pageable pageable = PageRequest.of(offset / limit, limit, Sort.by(Sort.Direction.ASC, "id"));
         List<ItemDto> items = itemService.getAllByOwner(userId, pageable);
@@ -51,7 +47,7 @@ public class ItemController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public ItemDto create(@RequestHeader("X-Sharer-User-Id") long userId,
-                          @Valid @RequestBody ItemCreateDto itemDto) {
+                          @RequestBody ItemCreateDto itemDto) {
         log.info("Request received: POST /items: {}", itemDto);
         ItemDto createdItem = itemService.create(itemDto, userId);
         log.info("Request POST /items processed: item={} is created", createdItem);
@@ -78,8 +74,8 @@ public class ItemController {
 
     @GetMapping("/search")
     public List<ItemDto> search(@RequestParam String text,
-                                @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
-                                @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit) {
+                                @RequestParam(value = "from") int offset,
+                                @RequestParam(value = "size") int limit) {
         log.debug("Request received: GET /items/search");
         Pageable pageable = PageRequest.of(offset / limit, limit);
         List<ItemDto> searchedItems = itemService.getSearcherItems(text, pageable);
@@ -90,7 +86,7 @@ public class ItemController {
     @PostMapping("/{itemId}/comment")
     public CommentDto create(@RequestHeader("X-Sharer-User-Id") long userId,
                              @PathVariable Long itemId,
-                             @Valid @RequestBody CommentCreateDto commentDto) {
+                             @RequestBody CommentCreateDto commentDto) {
         log.debug("Request received: POST /items/{itemId}/comment: {}", commentDto);
         CommentDto createdComment = itemService.create(commentDto, userId, itemId);
         log.info("Request POST /items/{itemId}/comment processed: comment={} is created", createdComment);

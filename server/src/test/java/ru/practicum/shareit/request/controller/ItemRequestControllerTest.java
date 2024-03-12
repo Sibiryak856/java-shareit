@@ -78,21 +78,6 @@ class ItemRequestControllerTest {
     }
 
     @Test
-    void create_whenRequestIsNotValid_thenStatusIsBadRequest() throws Exception {
-        requestCreateDto.setDescription("");
-
-        mvc.perform(post("/requests")
-                        .header("X-Sharer-User-Id", 1)
-                        .content(String.valueOf(mapper.writeValueAsString(requestCreateDto)))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(requestService, never()).create(any(ItemRequestCreateDto.class), anyLong());
-    }
-
-    @Test
     void create_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         when(requestService.create(any(ItemRequestCreateDto.class), anyLong()))
                 .thenThrow(NotFoundException.class);
@@ -121,26 +106,6 @@ class ItemRequestControllerTest {
                 .getContentAsString();
 
         assertThat(result).isEqualTo(mapper.writeValueAsString(List.of(requestDto)));
-    }
-
-    @Test
-    void findAll_whenParamFromIsNotValid_thenStatusIsBadRequest() throws Exception {
-        mvc.perform(get("/requests/all").header("X-Sharer-User-Id", 1)
-                        .param("from", "-1")
-                        .param("size", "10"))
-                .andExpect(status().isBadRequest());
-
-        verify(requestService, never()).findAll(anyLong(), any(Pageable.class));
-    }
-
-    @Test
-    void findAll_whenParamSizeIsNotValid_thenStatusIsBadRequest() throws Exception {
-        mvc.perform(get("/requests/all").header("X-Sharer-User-Id", 1)
-                        .param("from", "5")
-                        .param("size", "0"))
-                .andExpect(status().isBadRequest());
-
-        verify(requestService, never()).findAll(anyLong(), any(Pageable.class));
     }
 
     @Test

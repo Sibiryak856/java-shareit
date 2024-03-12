@@ -87,51 +87,6 @@ class BookingControllerTest {
     }
 
     @Test
-    void create_whenStartTimeInPast_thenStatusIBadRequest() throws Exception {
-        bookingCreateDto.setStartTime(LocalDateTime.now().minusMinutes(3));
-
-        mvc.perform(post("/bookings")
-                        .header("X-Sharer-User-Id", 1)
-                        .content(String.valueOf(mapper.writeValueAsString(bookingCreateDto)))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).create(any(BookingCreateDto.class), anyLong());
-    }
-
-    @Test
-    void create_whenEndBeforeStart_thenStatusIBadRequest() throws Exception {
-        bookingCreateDto.setEndTime(LocalDateTime.now().minusMinutes(3));
-
-        mvc.perform(post("/bookings")
-                        .header("X-Sharer-User-Id", 1)
-                        .content(String.valueOf(mapper.writeValueAsString(bookingCreateDto)))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).create(any(BookingCreateDto.class), anyLong());
-    }
-
-    @Test
-    void create_whenItemIdIsNull_thenStatusIBadRequest() throws Exception {
-        bookingCreateDto.setItemId(null);
-
-        mvc.perform(post("/bookings")
-                        .header("X-Sharer-User-Id", 1)
-                        .content(String.valueOf(mapper.writeValueAsString(bookingCreateDto)))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).create(any(BookingCreateDto.class), anyLong());
-    }
-
-    @Test
     void create_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         when(bookingService.create(any(BookingCreateDto.class), anyLong()))
                 .thenThrow(NotFoundException.class);
@@ -316,40 +271,6 @@ class BookingControllerTest {
     }
 
     @Test
-    void getAllByUserQuery_whenParamFromIsNotValid_thenStatusIsBadRequest() throws Exception {
-        Long userId = 1L;
-
-        mvc.perform(get("/bookings", userId)
-                        .header("X-Sharer-User-Id", 1)
-                        .param("state", "ALL")
-                        .param("from", "-1")
-                        .param("size", "10")
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).getAllByUserQuery(anyLong(), any(BookingState.class), any(Pageable.class));
-    }
-
-    @Test
-    void getAllByUserQuery_whenParamSizeIsNotValid_thenStatusIsBadRequest() throws Exception {
-        Long userId = 1L;
-
-        mvc.perform(get("/bookings", userId)
-                        .header("X-Sharer-User-Id", 1)
-                        .param("state", "ALL")
-                        .param("from", "5")
-                        .param("size", "0")
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).getAllByUserQuery(anyLong(), any(BookingState.class), any(Pageable.class));
-    }
-
-    @Test
     void getAllByOwnerQuery_whenRequestIsValid_thenStatusIsOkAndReturnListOfBookingDto() throws Exception {
         Long userId = 1L;
         when(bookingService.getAllByOwnerQuery(anyLong(), any(BookingState.class), any(Pageable.class)))
@@ -394,40 +315,6 @@ class BookingControllerTest {
                         .param("state", "smth")
                         .param("from", "5")
                         .param("size", "10")
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).getAllByOwnerQuery(anyLong(), any(BookingState.class), any(Pageable.class));
-    }
-
-    @Test
-    void getAllByOwnerQuery_whenParamFromIsNotValid_thenStatusIsBadRequest() throws Exception {
-        Long userId = 1L;
-
-        mvc.perform(get("/bookings/owner", userId)
-                        .header("X-Sharer-User-Id", 1)
-                        .param("state", "ALL")
-                        .param("from", "-1")
-                        .param("size", "10")
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(bookingService, never()).getAllByOwnerQuery(anyLong(), any(BookingState.class), any(Pageable.class));
-    }
-
-    @Test
-    void getAllByOwnerQuery_whenParamSizeIsNotValid_thenStatusIsBadRequest() throws Exception {
-        Long userId = 1L;
-
-        mvc.perform(get("/bookings/owner", userId)
-                        .header("X-Sharer-User-Id", 1)
-                        .param("state", "ALL")
-                        .param("from", "5")
-                        .param("size", "0")
                         .characterEncoding(StandardCharsets.UTF_8)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))

@@ -138,45 +138,6 @@ class UserControllerTest {
     }
 
     @Test
-    void create_whenUserEmailIsNotValid_thenReturnBadRequest() throws Exception {
-        userCreateDto.setEmail("e.ru");
-        mvc.perform(post("/users")
-                        .content(String.valueOf(mapper.writeValueAsString(userCreateDto)))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(userService, never()).create(userCreateDto);
-    }
-
-    @Test
-    void create_whenUserEmailIsNull_thenReturnBadRequest() throws Exception {
-        userCreateDto.setEmail(null);
-        mvc.perform(post("/users")
-                        .content(String.valueOf(mapper.writeValueAsString(userCreateDto)))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(userService, never()).create(userCreateDto);
-    }
-
-    @Test
-    void create_whenUserNameIsBlank_thenReturnBadRequest() throws Exception {
-        userCreateDto.setName("");
-        mvc.perform(post("/users")
-                        .content(String.valueOf(mapper.writeValueAsString(userCreateDto)))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(userService, never()).create(userCreateDto);
-    }
-
-    @Test
     void update_whenUserIsValid_thenStatusIsOkAndReturnUpdatedUser() throws Exception {
         when(userService.update(anyLong(), any(UserUpdateDto.class)))
                 .thenReturn(userUpdatedDto);
@@ -192,20 +153,6 @@ class UserControllerTest {
                 .getContentAsString();
 
         assertThat(result).isEqualTo(mapper.writeValueAsString(userUpdatedDto));
-    }
-
-    @Test
-    void update_whenUserEmailIsNotValid_thenBadRequest() throws Exception {
-        userDtoToUpdate.setEmail("e.ru");
-
-        mvc.perform(patch("/users/{id}", userDto.getId())
-                        .content(String.valueOf(mapper.writeValueAsString(userDtoToUpdate)))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(userService, never()).update(userDto.getId(), userDtoToUpdate);
     }
 
     @Test

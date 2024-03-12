@@ -13,8 +13,6 @@ import ru.practicum.shareit.booking.dto.BookingCreateDto;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.service.BookingService;
 
-import javax.validation.Valid;
-import javax.validation.constraints.Min;
 import java.util.List;
 
 @RestController
@@ -33,7 +31,7 @@ public class BookingController {
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping
     public BookingDto create(@RequestHeader("X-Sharer-User-Id") long userId,
-                             @Valid @RequestBody BookingCreateDto bookingDto) {
+                             @RequestBody BookingCreateDto bookingDto) {
         log.info("Request received: POST /bookings: {}", bookingDto);
         BookingDto createdBooking = bookingService.create(bookingDto, userId);
         log.info("Request POST /bookings processed: booking={} is created", createdBooking);
@@ -64,9 +62,9 @@ public class BookingController {
     @GetMapping
     public List<BookingDto> getAllByUserQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "ALL", required = false) String state,
-            @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
-            @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit
+            @RequestParam String state,
+            @RequestParam(value = "from") int offset,
+            @RequestParam(value = "size") int limit
     ) {
         log.debug("Request received: GET /bookings");
         BookingState bookingState = BookingState.from(state)
@@ -80,9 +78,9 @@ public class BookingController {
     @GetMapping("/owner")
     public List<BookingDto> getAllByOwnerQuery(
             @RequestHeader("X-Sharer-User-Id") long userId,
-            @RequestParam(defaultValue = "ALL", required = false) String state,
-            @Min(0) @RequestParam(value = "from", defaultValue = "0") int offset,
-            @Min(1) @RequestParam(value = "size", defaultValue = "10") int limit
+            @RequestParam String state,
+            @RequestParam(value = "from") int offset,
+            @RequestParam(value = "size") int limit
     ) {
         log.debug("Request received: GET /bookings/owner");
         BookingState bookingState = BookingState.from(state)

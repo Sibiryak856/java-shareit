@@ -109,28 +109,6 @@ class ItemControllerTest {
     }
 
     @Test
-    void getAllByUser_whenRequestParamFromFalse_thenBadRequest() throws Exception {
-        mvc.perform(get("/items")
-                        .header("X-Sharer-User-Id", 1)
-                        .param("from", "-1")
-                        .param("size", "10"))
-                .andExpect(status().isBadRequest());
-
-        verify(itemService, never()).getAllByOwner(anyLong(), any(Pageable.class));
-    }
-
-    @Test
-    void getAllByUser_whenRequestSizeFromFalse_thenBadRequest() throws Exception {
-        mvc.perform(get("/items")
-                        .header("X-Sharer-User-Id", 1)
-                        .param("from", "5")
-                        .param("size", "0"))
-                .andExpect(status().isBadRequest());
-
-        verify(itemService, never()).getAllByOwner(anyLong(), any(Pageable.class));
-    }
-
-    @Test
     void getAllByUser_whenUserNotFound_thenStatusIsNotFound() throws Exception {
         when(itemService.getAllByOwner(anyLong(), any(Pageable.class)))
                 .thenThrow(NotFoundException.class);
@@ -186,21 +164,6 @@ class ItemControllerTest {
                 .getContentAsString();
 
         assertThat(result).isEqualTo(mapper.writeValueAsString(itemDto));
-    }
-
-    @Test
-    void create_whenItemIsNotValid_thenStatusIsBadRequest() throws Exception {
-        itemCreateDto.setName("");
-
-        mvc.perform(post("/items")
-                        .header("X-Sharer-User-Id", 1)
-                        .content(String.valueOf(mapper.writeValueAsString(itemCreateDto)))
-                        .characterEncoding(StandardCharsets.UTF_8)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest());
-
-        verify(itemService, never()).create(any(ItemCreateDto.class), anyLong());
     }
 
     @Test
