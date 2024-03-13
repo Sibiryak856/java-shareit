@@ -71,8 +71,7 @@ public class BookingServiceImpl implements BookingService {
             throw new IllegalArgumentException(
                     String.format("Status has already changed to %s", booking.getStatus()));
         }
-        if (approved) booking.setStatus(BookingStatus.APPROVED);
-        else booking.setStatus(BookingStatus.REJECTED);
+        booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
         return bookingMapper.toBookingDto(bookingRepository.save(booking));
     }
 

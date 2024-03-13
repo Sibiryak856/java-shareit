@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import javax.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,20 +66,6 @@ public class ErrorHandler {
         e.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        log.info(errors.toString());
-        return errors;
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(ConstraintViolationException.class)
-    public Map<String, String> handleConstraintViolationException(
-            ConstraintViolationException e) {
-        Map<String, String> errors = new HashMap<>();
-        e.getConstraintViolations().forEach((error) -> {
-            String fieldName = error.getPropertyPath().toString();
-            String errorMessage = error.getMessage();
             errors.put(fieldName, errorMessage);
         });
         log.info(errors.toString());

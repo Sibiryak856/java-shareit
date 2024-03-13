@@ -1,13 +1,13 @@
 package ru.practicum.shareit.booking.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.practicum.shareit.booking.validation.StartBeforeEnd;
 
 import java.time.LocalDateTime;
 
-@Getter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @StartBeforeEnd
